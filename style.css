@@ -1,0 +1,373 @@
+@font-face {
+  font-family: 'StarWarsCrawl';
+  src: url('/font/text.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: #020206;
+}
+
+#webgl-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#space-hud {
+  position: fixed;
+  top: 18px;
+  left: 22px;
+  z-index: 50;
+  font-family: 'Space Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: rgba(140, 220, 255, 0.85);
+  text-shadow: 0 0 10px rgba(75, 242, 255, 0.4);
+  background: rgba(2, 6, 14, 0.45);
+  border: 1px solid rgba(75, 242, 255, 0.25);
+  border-radius: 6px;
+  padding: 6px 12px;
+  pointer-events: none;
+  user-select: none;
+}
+
+#scroll-hud {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  z-index: 50;
+  font-family: 'Space Mono', monospace;
+  font-size: 15px;
+  letter-spacing: 1px;
+  color: rgba(140, 220, 255, 0.85);
+  text-shadow: 0 0 10px rgba(75, 242, 255, 0.4);
+  background: rgba(2, 6, 14, 0.45);
+  border: 1px solid rgba(75, 242, 255, 0.25);
+  border-radius: 6px;
+  padding: 6px 12px;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* --- Star Wars Intro Crawl --- */
+.star-wars-intro {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 520px;
+  perspective-origin: 50% 65%;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.star-wars-intro::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 26vh;
+  background: linear-gradient(to bottom, rgba(2, 2, 6, 0.98) 0%, rgba(2, 2, 6, 0.6) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 20;
+}
+
+.crawl-shade {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at 50% 55%,
+    rgba(2, 2, 6, 1) 0%,
+    rgba(2, 2, 6, 0.95) 60%,
+    rgba(2, 2, 6, 0.8) 100%
+  );
+  opacity: 1;
+  pointer-events: none;
+  z-index: 0;
+  will-change: opacity;
+}
+
+.crawl-viewport {
+  position: relative;
+  width: min(1550px, 95vw);
+  height: 130vh;
+  transform-origin: 50% 100%;
+  transform: rotateX(23deg);
+  display: flex;
+  justify-content: center;
+}
+
+.crawl-stage {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  text-align: center;
+  font-family: 'StarWarsCrawl', 'Space Grotesk', sans-serif;
+  color: #ffd024;
+  text-shadow: 0 0 24px rgba(255, 208, 36, 0.5);
+  line-height: 1.8;
+  letter-spacing: 3px;
+  will-change: transform, opacity;
+  transform-origin: 50% 50%;
+  opacity: 0;
+  visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#crawl-stage-1 .crawl-title,
+#crawl-stage-4 .crawl-title {
+  font-size: clamp(7.5rem, 15vw, 13.5rem);
+  font-weight: 700;
+  letter-spacing: 8px;
+  text-transform: uppercase;
+  color: #ffdf40;
+  text-shadow: 0 0 35px rgba(255, 223, 64, 0.65);
+  line-height: 1.25;
+}
+
+#crawl-stage-2 .crawl-subtitle {
+  font-size: clamp(5rem, 10vw, 9rem);
+  font-weight: 600;
+  color: #f7ca18;
+  letter-spacing: 6px;
+  line-height: 1.35;
+  text-shadow: 0 0 30px rgba(247, 202, 24, 0.6);
+}
+
+#crawl-stage-3 .crawl-body {
+  display: flex;
+  flex-direction: column;
+  gap: 5rem;
+  width: 100%;
+}
+
+#crawl-stage-3 .crawl-text {
+  font-size: clamp(3.6rem, 6.2vw, 5.6rem);
+  font-weight: 400;
+  text-align: justify;
+  text-justify: inter-word;
+  line-height: 1.75;
+  letter-spacing: 3px;
+  color: #ffe666;
+  text-shadow: 0 0 22px rgba(255, 230, 102, 0.5);
+}
+
+/* --- Project Showcase Stage (scroll 9400+) --- */
+.project-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  background: rgba(2, 2, 8, 0.86);
+}
+
+.project-layout {
+  display: flex;
+  align-items: stretch;
+  gap: clamp(24px, 4vw, 56px);
+  /* Use more of the screen — the old 1600px cap left dead space at the
+     edges on wide displays and squeezed the video pair */
+  width: min(1900px, 96vw);
+  height: min(82vh, 880px);
+}
+
+/* Left: scrollable text column (driven by wheel, edges masked) */
+.project-text {
+  flex: 0 0 30%;
+  margin-left: -2vw;
+  overflow: hidden;
+  position: relative;
+  font-family: 'StarWarsCrawl', 'Space Grotesk', sans-serif;
+  /* Breathing room so the column doesn't stick to the screen edge */
+  padding-left: clamp(1.1rem, 2.2vw, 2.4rem);
+  padding-right: clamp(0.7rem, 1.4vw, 1.5rem);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 9%,
+    #000 91%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 9%,
+    #000 91%,
+    transparent 100%
+  );
+}
+
+.project-text-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  padding: 2rem 0.75rem 40vh;
+  will-change: transform;
+}
+
+.project-title {
+  /* vmin scales with the SHORTER axis so the type shrinks on both
+     narrow and short screens */
+  font-size: clamp(2rem, 5vmin, 5.4rem);
+  font-weight: 700;
+  letter-spacing: 7px;
+  text-transform: uppercase;
+  color: #ffdf40;
+  text-shadow: 0 0 28px rgba(255, 223, 64, 0.55);
+  line-height: 1.15;
+}
+
+.project-subtitle {
+  font-size: clamp(0.95rem, 2vmin, 1.8rem);
+  font-weight: 600;
+  letter-spacing: 5px;
+  color: rgba(140, 220, 255, 0.9);
+  text-shadow: 0 0 14px rgba(75, 242, 255, 0.35);
+}
+
+.project-h {
+  margin-top: 1.2rem;
+  font-size: clamp(1rem, 1.9vmin, 1.7rem);
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #ffdf40;
+  text-shadow: 0 0 16px rgba(255, 223, 64, 0.35);
+}
+
+.project-p {
+  font-size: clamp(0.95rem, 1.7vmin, 1.5rem);
+  font-weight: 300;
+  line-height: 1.75;
+  letter-spacing: 0.5px;
+  color: rgba(215, 232, 255, 0.82);
+}
+
+/* Right: looping videos — main centered, reel beside it */
+.project-videos {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: clamp(18px, 2.5vw, 32px);
+  min-width: 0;
+}
+
+.project-video {
+  display: block;
+  background: transparent;
+  border: none;
+  border-radius: 16px;
+  object-fit: contain;
+  transform: translateZ(0);
+  box-shadow:
+    0 0 46px rgba(75, 242, 255, 0.12),
+    0 30px 70px rgba(0, 0, 0, 0.65);
+}
+
+.project-video-main {
+  /* Fill whatever remains after the side video instead of a fixed 99%
+     that shoved it off screen — the pair always fits the column. */
+  flex: 1 1 auto;
+  min-width: 0;
+  width: auto;
+  max-width: 1540px;
+  height: auto;
+  max-height: 100%;
+}
+
+/* Second showcase: single video centered in its column */
+.project2-videos {
+  justify-content: center;
+}
+
+/* Third showcase: PC frame matched to the mobile frame's height, pair
+   anchored left so any extra width flows toward the viewport edge. */
+.project3-videos {
+  justify-content: flex-start;
+}
+
+/* Height-driven sizing: same height as the mobile video (68%), width
+   follows the PC clip's aspect ratio. flex:0 0 auto opts out of the
+   fill-remaining behavior so the height match isn't stretched. */
+.project3-videos .project-video-main {
+  flex: 0 0 auto;
+  width: auto;
+  height: 68%;
+  max-height: none;
+}
+
+/* Stage 3 shares the same text column rules as stages 1/2 —
+   no per-stage layout overrides. */
+
+/* Small screens: rein in the offset so the column can't leave the frame,
+   tighten layout spacing, and give the text column a bit more room. */
+@media (max-width: 1400px) {
+  .project-layout {
+    gap: clamp(16px, 2.5vw, 32px);
+  }
+
+  .project-text {
+    flex: 0 0 34%;
+  }
+
+  /* The height-matched video pair is too wide for narrow screens —
+     shrink the pair proportionally so it stays inside the frame. */
+  .project3-videos .project-video-main,
+  .project3-videos .project-video-side {
+    height: 46%;
+  }
+}
+
+/* Mid-size screens: the pair at 68% overflows the viewport edge */
+@media (min-width: 1401px) and (max-width: 2000px) {
+  .project3-videos .project-video-main,
+  .project3-videos .project-video-side {
+    height: 52%;
+  }
+}
+
+.project-video-side {
+  /* Height-driven width — never shrink or it gets squeezed out */
+  flex: 0 0 auto;
+  height: 68%;
+  width: auto;
+}
+

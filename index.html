@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Cosmic Starfield</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='10' fill='%234bf2ff'/><path d='M50 5 L53 45 L95 50 L53 55 L50 95 L47 55 L5 50 L47 45 Z' fill='%23ffffff'/></svg>" />
+    <link rel="stylesheet" href="./style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="webgl-container"></div>
+    <div id="space-hud">Z 0</div>
+    <div id="scroll-hud">0 / 0</div>
+
+    <!-- Star Wars Opening Crawl: 3 Sequential Stages -->
+    <div class="star-wars-intro" id="star-wars-intro">
+      <div class="crawl-shade" id="crawl-shade"></div>
+      <div class="crawl-viewport">
+        <!-- Stage 1 -->
+        <div class="crawl-stage" id="crawl-stage-1">
+          <h1 class="crawl-title">Hello, I'm Elcan Ismayilov.</h1>
+        </div>
+
+        <!-- Stage 2 -->
+        <div class="crawl-stage" id="crawl-stage-2">
+          <h2 class="crawl-subtitle">I'm a Systems Architecture &amp; Full Stack Software Engineer.</h2>
+        </div>
+
+        <!-- Stage 3 -->
+        <div class="crawl-stage" id="crawl-stage-3">
+          <div class="crawl-body">
+            <p class="crawl-text">
+              Fully committed to the philosophy of continuous innovation, I’m a full stack developer with a deep passion for React, backend architecture, and building specialized systems.
+            </p>
+            <p class="crawl-text">
+              The unique challenge of merging clean logic with complex data—from enterprise applications to RF spectrum monitoring—drives my excitement for software engineering.
+            </p>
+          </div>
+        </div>
+
+        <!-- Stage 4 -->
+        <div class="crawl-stage" id="crawl-stage-4">
+          <h1 class="crawl-title">Projects</h1>
+        </div>
+      </div>
+
+      <!-- Project Showcase: space frozen at scroll 9400, text slides with wheel -->
+      <div class="project-stage" id="project-stage">
+        <div class="project-layout">
+          <aside class="project-text">
+            <div class="project-text-inner" id="project-text-inner">
+              <h2 class="project-title">CEKICLIP V2</h2>
+              <h3 class="project-subtitle">AUTOMATED AI VIDEO PIPELINE</h3>
+              <p class="project-p">
+                An autonomous desktop application engineered to transform full-length media into optimized, viral short-form content.
+              </p>
+
+              <h3 class="project-h">THE ARCHITECTURE</h3>
+              <p class="project-p">
+                Built on a modular, multi-threaded Python backend. Paired with a custom PyQt6 interface to manage heavy asynchronous workloads with zero UI latency.
+              </p>
+
+              <h3 class="project-h">THE AI PIPELINE</h3>
+              <p class="project-p">
+                Powered by a multi-model infrastructure. OpenAI Whisper maps precise word-level transcription. Google Gemini identifies high-impact moments. Edge-TTS generates dynamic voiceovers.
+              </p>
+
+              <h3 class="project-h">THE ENGINE</h3>
+              <p class="project-p">
+                A custom FFmpeg rendering engine handles the visual transformation. GPU-accelerated Demucs isolates vocals. Automated systems apply 9:16 aspect ratios, animated typography, and Content-ID mitigation.
+              </p>
+
+              <h3 class="project-h">THE DEPLOYMENT</h3>
+              <p class="project-p">
+                Seamlessly integrated with YouTube Data and Analytics APIs. Handling automated OAuth uploads, scheduled publishing, and real-time hardware telemetry.
+              </p>
+            </div>
+          </aside>
+
+          <div class="project-videos">
+            <video class="project-video project-video-main" src="/videos/cekiclip30s.mp4" muted loop playsinline></video>
+            <video class="project-video project-video-side" src="/videos/reel.mp4" muted loop playsinline></video>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Showcase 2: space frozen at scroll 12000, CEKIGREP centered -->
+      <div class="project-stage" id="project2-stage">
+        <div class="project-layout">
+          <aside class="project-text">
+            <div class="project-text-inner" id="project2-text-inner">
+              <h2 class="project-title">CEKIGREP</h2>
+              <h3 class="project-subtitle">NATIONAL SPECTRUM OVERSIGHT</h3>
+              <p class="project-p">
+                A specialized SIGINT and spectrum monitoring platform engineered to track, analyze, and secure the national radio frequency landscape.
+              </p>
+
+              <h3 class="project-h">THE HARDWARE PIPELINE</h3>
+              <p class="project-p">
+                Ingesting raw spectrum data via RTL-SDR, HTOOL SDR 6, NRSP-ST, and SDRuno receivers. A custom digital signal processing engine executes precise FFTs to instantly detect jamming, interference, and cross-border anomalies.
+              </p>
+
+              <h3 class="project-h">THE DATA ARCHITECTURE</h3>
+              <p class="project-p">
+                Built for zero-latency telemetry. Tens of millions of historical sweep records are aggressively optimized through in-memory ring buffers and recursive PostgreSQL queries, streaming live spectrum arrays at 4Hz over WebSockets.
+              </p>
+
+              <h3 class="project-h">THE TACTICAL INTERFACE</h3>
+              <p class="project-p">
+                A real-time 3D React command center powered by WebGL shaders and live data waterfalls. Protected by a zero-trust FIDO2 WebAuthn security model and featuring an embedded AI assistant for natural-language database querying.
+              </p>
+
+              <h3 class="project-h">THE DEPLOYMENT</h3>
+              <p class="project-p">
+                Operating across seven regional nodes. Monitoring over 400 frequency-transmitter mappings to ensure broadcast integrity, automate outage alerting, and classify RF intent across the digital frontier.
+              </p>
+            </div>
+          </aside>
+
+          <div class="project-videos project2-videos">
+            <video class="project-video project-video-main" src="/videos/cekigrep.mp4" muted loop playsinline></video>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project Showcase 3: space frozen at scroll 15900, GRAILS OF WAR -->
+      <div class="project-stage" id="project3-stage">
+        <div class="project-layout">
+          <aside class="project-text">
+            <div class="project-text-inner" id="project3-text-inner">
+              <h2 class="project-title">GRAILS OF WAR</h2>
+              <p class="project-p">
+                A complete digital card game designed, engineered, and shipped entirely solo. A fusion of strategic resource management and high-variance mechanics, built across web and native mobile platforms.
+              </p>
+
+              <h3 class="project-h">THE ARCHITECTURE</h3>
+              <p class="project-p">
+                Powered by a custom, framework-agnostic TypeScript engine. Core state transitions operate entirely decoupled from the UI using a draft-mutation pattern, allowing the exact same deterministic game logic to drive both a React web client and a native Expo application.
+              </p>
+
+              <h3 class="project-h">THE ENGINE</h3>
+              <p class="project-p">
+                A specialized effects layer resolves complex card abilities, resurrection hooks, and 30 unique location modifiers. The engine operates purely headlessly, communicating with the render layer strictly through transient event queues while a probability-driven AI evaluates optimal plays.
+              </p>
+
+              <h3 class="project-h">THE CONTENT PIPELINE</h3>
+              <p class="project-p">
+                Engineered a custom data pipeline to manage scale. Node and Python code generators parse plain-text design documents, compiling 214 unique cards, 8 factions, and extensive lore directly into strictly typed code—ensuring a single source of truth.
+              </p>
+
+              <h3 class="project-h">THE PRESENTATION</h3>
+              <p class="project-p">
+                Rendered through a bespoke gothic-CRT aesthetic. Phaser 4 orchestrates animated board states bridged seamlessly to a React DOM, backed by a dual-mode low-latency audio architecture and an integrated original soundtrack player.
+              </p>
+            </div>
+          </aside>
+
+          <div class="project-videos project3-videos">
+            <video class="project-video project-video-main" src="/videos/grailsofwar_pc.mp4" muted loop playsinline></video>
+            <video class="project-video project-video-side" src="/videos/grailsofwar_mobile.mp4" muted loop playsinline></video>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
