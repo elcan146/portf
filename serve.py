@@ -86,6 +86,13 @@ class ThreadedHTTPServer(socketserver.ThreadingTCPServer):
     daemon_threads = True
     allow_reuse_address = True
 
+    def handle_error(self, request, client_address):
+        # Browsers abort video/GLB streams all the time - don't spam tracebacks
+        exc = sys.exc_info()[1]
+        if isinstance(exc, (ConnectionResetError, BrokenPipeError)):
+            return
+        super().handle_error(request, client_address)
+
 
 def start_http(port: int) -> ThreadedHTTPServer:
     if not os.path.isdir(DIST_DIR):
