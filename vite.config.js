@@ -41,6 +41,12 @@ export default defineConfig({
         if (fs.existsSync(srcFont)) {
           fs.cpSync(srcFont, destFont, { recursive: true });
         }
+
+        const srcVideos = path.join(process.cwd(), 'videos');
+        const destVideos = path.join(process.cwd(), 'dist', 'videos');
+        if (fs.existsSync(srcVideos)) {
+          fs.cpSync(srcVideos, destVideos, { recursive: true });
+        }
       }
     }
   ],

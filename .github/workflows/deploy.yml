@@ -1,0 +1,25 @@
+name: Deploy to AWS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # allows manual "Run workflow" button
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.AWS_HOST }}        # EC2 public IP or DNS
+          username: ${{ secrets.AWS_USER }}    # e.g. ubuntu / ec2-user
+          key: ${{ secrets.AWS_SSH_KEY }}      # private key contents (.pem)
+          script: |
+            set -e
+            cd ~/portfo
+            git pull origin main
+            npm install
+            npm run build
+            sudo systemctl restart portfo
+            echo "Deployed $(git rev-parse --short HEAD)"
