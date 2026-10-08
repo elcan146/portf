@@ -143,6 +143,16 @@
     <!-- Return chip — only visible while the scroll sequence plays -->
     <button class="cockpit-back" id="cockpit-back" type="button">&larr; COCKPIT</button>
 
+    <!-- Boot intro: typewriter in the dark, then eyelids flutter open -->
+    <div id="boot-intro" aria-hidden="true">
+      <div class="boot-type">
+        <span class="boot-ghost">A long time ago in a galaxy far, far away....</span>
+        <span class="boot-live">
+          <span class="boot-typed"></span><span class="boot-caret"></span>
+        </span>
+      </div>
+    </div>
+
     <!-- Star Wars Opening Crawl: 3 Sequential Stages -->
     <div class="star-wars-intro" id="star-wars-intro">
       <div class="crawl-shade" id="crawl-shade"></div>

@@ -1317,6 +1317,92 @@ if (cockpitBackBtn) {
   cockpitBackBtn.addEventListener("click", () => setSpaceMode("cockpit"));
 }
 
+// --- Boot Intro ---
+// Typewriter in the dark -> hold -> fade -> eyelids flutter open on the
+// cockpit. pointerdown/keydown skips straight to the reveal.
+const bootIntro = document.getElementById("boot-intro");
+const bootTyped = bootIntro?.querySelector(".boot-typed");
+const BOOT_LINE = "A long time ago in a galaxy far, far away....";
+
+if (bootIntro && bootTyped) {
+  document.body.classList.add("booting");
+  let bootDone = false;
+  let bootTimer = null;
+  const wait = (ms, fn) => {
+    bootTimer = setTimeout(() => {
+      if (!bootDone) fn();
+    }, ms);
+  };
+
+  const finish = () => {
+    if (bootDone) return;
+    bootDone = true;
+    bootIntro.remove();
+    document.body.classList.remove("booting");
+  };
+
+  // Replay the console's power-on as the eyes open — cockpit waking up
+  const rebootMenu = () => {
+    if (!cockpitMenu) return;
+    cockpitMenu.style.animation = "none";
+    void cockpitMenu.offsetWidth;
+    cockpitMenu.style.animation = "";
+  };
+
+  const wake = () => {
+    rebootMenu();
+    bootIntro.classList.add("awake"); // text fades out over 0.8s
+    // Orb blooms while the tail of the line fade is still visible —
+    // overlapping the two reads as one continuous transition
+    wait(950, () => {
+      bootIntro.classList.add("eyes"); // void fades out
+      const onGone = (e) => {
+        if (e && e.propertyName !== "opacity") return;
+        finish();
+      };
+      bootIntro.addEventListener("transitionend", onGone, { once: true });
+      wait(2200, finish); // safety if transitionend never fires
+    });
+  };
+
+  const typeChar = (i) => {
+    if (i > BOOT_LINE.length) {
+      wait(1500, wake); // linger on the full line, then wake up
+      return;
+    }
+    bootTyped.textContent = BOOT_LINE.slice(0, i);
+    const ch = BOOT_LINE[i - 1];
+    let d = 45 + Math.random() * 40; // human-ish cadence
+    if (ch === ",") d = 420;
+    else if (ch === ".") d = 260;
+    wait(d, () => typeChar(i + 1));
+  };
+
+  const skip = () => {
+    if (bootDone) return;
+    bootDone = true;
+    clearTimeout(bootTimer);
+    rebootMenu();
+    bootIntro.classList.add("skipping");
+    const onGone = () => {
+      bootIntro.remove();
+      document.body.classList.remove("booting");
+    };
+    bootIntro.addEventListener("transitionend", onGone, { once: true });
+    setTimeout(onGone, 700); // safety
+  };
+  window.addEventListener("pointerdown", skip, { once: true });
+  window.addEventListener("keydown", skip, { once: true });
+
+  // Reduced motion: no typing — flash the line briefly, then open
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    bootTyped.textContent = BOOT_LINE;
+    wait(1200, wake);
+  } else {
+    wait(650, () => typeChar(1)); // a beat of darkness first
+  }
+}
+
 // Boot into the cockpit-only view
 setSpaceMode("cockpit");
 

@@ -664,6 +664,89 @@ body[data-mode="sequence"] .cockpit-back {
   user-select: none;
 }
 
+/* --- Boot Intro ---
+   The overlay is a solid black void while the typewriter line prints.
+   When .awake lands the line fades; a beat later (.eyes) the whole
+   void fades out and reveals the cockpit already rendering beneath. */
+#boot-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none; /* visual only — skip is listened on window */
+  background: #020206;
+  transition: opacity 1.8s ease;
+}
+/* The void itself fades away to reveal the cockpit beneath. */
+#boot-intro.eyes {
+  opacity: 0;
+}
+#boot-intro.skipping {
+  opacity: 0;
+  transition-duration: 0.5s; /* fast bail on skip */
+}
+
+.boot-type {
+  position: absolute;
+  inset: 0;
+  z-index: 2; /* above everything else inside the void */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8vw;
+  font-family: 'StarWarsCrawl', 'Space Grotesk', sans-serif;
+  font-size: clamp(2.1rem, 6.2vw, 5.6rem);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 2px;
+  text-align: center;
+  color: #4bd5ee;
+  text-shadow: 0 0 26px rgba(75, 213, 238, 0.45);
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+/* Ghost reserves the final line-box so nothing shifts as glyphs appear */
+.boot-ghost {
+  visibility: hidden;
+}
+.boot-live {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: inherit;
+}
+.boot-typed {
+  white-space: pre-wrap;
+}
+.boot-caret {
+  display: inline-block;
+  width: 0.55em;
+  height: 1.05em;
+  margin-left: 0.08em;
+  vertical-align: -0.12em;
+  background: #4bd5ee;
+  box-shadow: 0 0 18px rgba(75, 213, 238, 0.7);
+  animation: caretBlink 0.9s steps(1) infinite;
+}
+/* Type fades out on its own just before the lids start fluttering */
+#boot-intro.awake .boot-type,
+#boot-intro.skipping .boot-type {
+  opacity: 0;
+}
+
+/* Nothing but darkness + the line while booting */
+body.booting #space-hud,
+body.booting #scroll-hud {
+  visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #boot-intro.eyes {
+    transition-duration: 0.4s;
+  }
+}
+
 /* --- Star Wars Intro Crawl --- */
 .star-wars-intro {
   position: fixed;
