@@ -18,6 +18,131 @@
     <div id="space-hud">Z 0</div>
     <div id="scroll-hud">0 / 0</div>
 
+    <!-- Warp flash — white fade that swallows the mode switch -->
+    <div id="warp-flash"></div>
+
+    <!-- Cockpit menu — glued to the center screen cutout by main.js -->
+    <div class="cockpit-menu" data-cockpit="mainScreen">
+      <div class="menu-top">
+        <span>&#9701; ELCAN.SYS</span>
+        <span>// NAV TERMINAL //</span>
+        <span>PWR &#9646;&#9646;&#9646; V2.7</span>
+      </div>
+      <div class="menu-divider"><span class="divider-pulse"></span></div>
+      <nav class="menu-row">
+        <button class="menu-btn" data-goto="crawl" data-panel="about" type="button">
+          <span class="btn-idx">[ 01 ]</span>
+          <span class="btn-label">ABOUT ME</span>
+          <span class="btn-sub">INTRO SEQUENCE</span>
+        </button>
+        <button class="menu-btn" data-goto="projects" data-panel="projects" type="button">
+          <span class="btn-idx">[ 02 ]</span>
+          <span class="btn-label">PROJECTS</span>
+          <span class="btn-sub">SHOWCASE REEL</span>
+        </button>
+        <button class="menu-btn" data-panel="contact" type="button">
+          <span class="btn-idx">[ 03 ]</span>
+          <span class="btn-label">CONTACT</span>
+          <span class="btn-sub">COMM LINK</span>
+        </button>
+      </nav>
+      <div class="menu-divider"><span class="divider-pulse"></span></div>
+      <div class="menu-bottom">
+        <span>SYS READY <span class="caret">&#9646;</span></span>
+        <span>NAV &#9650; &middot; COMMS &#9660;</span>
+      </div>
+    </div>
+
+    <!-- Window menu — glued to the windshield trapezoid (windowmenu.png).
+         Hovering a console button projects a panel here. -->
+    <div class="window-menu" data-cockpit="windowMenu">
+      <!-- Glowing trapezoid frame — the PNG is a flat black silhouette, so
+           the border is drawn here as a vector (bottom edge is 46.4% of the
+           top, measured from the PNG alpha bbox). -->
+      <svg class="wm-frame" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+        <polygon class="wm-frame-glow" points="1.2,1.5 98.8,1.5 72.6,98.5 27.4,98.5" />
+        <polygon class="wm-frame-line" points="1.2,1.5 98.8,1.5 72.6,98.5 27.4,98.5" />
+      </svg>
+      <div class="wm-idle">&#9656; SELECT A MODULE TO DECRYPT &#9666;</div>
+
+      <section class="wm-panel" data-panel="about">
+        <div class="wm-head wm-head-lower">
+          <span data-scramble>[ SYS_ID: ELCAN_ISMAYILOV ]</span>
+        </div>
+        <div class="wm-line"><span data-scramble>&gt; ROLE_CLASS: FULL-STACK &amp; TELECOMMUNICATIONS ENGINEER</span></div>
+        <div class="wm-key" data-scramble>[ ACADEMIC_UPLINK ]</div>
+        <div class="wm-sub"><span data-scramble>&#9500; MSc Information Security (AzTU)</span></div>
+        <div class="wm-sub"><span data-scramble>&#9492; BSc Telecommunications (NAA)</span></div>
+        <div class="wm-skills-bottom">
+          <div class="wm-key" data-scramble>[ SKILL_MATRIX ]</div>
+          <div class="wm-skill-line"><span data-scramble>Python &middot; JavaScript/JSX &middot; SQL &middot; React 19 &middot; Vite</span></div>
+          <div class="wm-skill-line"><span data-scramble>FastAPI &middot; PostgreSQL &middot; SQLAlchemy &middot; WebSockets &middot; REST</span></div>
+          <div class="wm-skill-line"><span data-scramble>WebAuthn &middot; JWT &middot; RBAC &middot; FFmpeg &middot; Google GenAI</span></div>
+          <div class="wm-skill-line"><span data-scramble>Docker &middot; AWS &middot; GCP &middot; Cloudflare &middot; WAF &middot; Shell</span></div>
+          <div class="wm-skill-line"><span data-scramble>Scikit-learn &middot; Pandas &middot; NumPy &middot; NLP</span></div>
+        </div>
+      </section>
+
+      <section class="wm-panel" data-panel="projects">
+        <div class="wm-head">
+          <span data-scramble>[ MISSION_LOG // DEPLOYED ]</span>
+        </div>
+        <div class="wm-proj">
+          <span class="wm-name" data-scramble>&gt; CEKIGREP</span>
+          <span class="wm-desc" data-scramble>National RF monitoring grid &middot; 7 SDRs &middot; 2.5M rec/day &middot; local AI</span>
+        </div>
+        <div class="wm-proj">
+          <span class="wm-name" data-scramble>&gt; CEKICLIP</span>
+          <span class="wm-desc" data-scramble>Automated AI video synthesis, transcription &amp; rendering pipeline</span>
+        </div>
+        <div class="wm-proj">
+          <span class="wm-name" data-scramble>&gt; GRAIL OF WAR</span>
+          <span class="wm-desc" data-scramble>Cross-platform CCG &middot; custom TS engine &middot; React Native &middot; Phaser</span>
+        </div>
+        <div class="wm-proj">
+          <span class="wm-name" data-scramble>&gt; SEWFORMER [WIP]</span>
+          <span class="wm-desc" data-scramble>Blender plugin development</span>
+        </div>
+        <div class="wm-proj">
+          <span class="wm-name" data-scramble>&gt; AZTRONICS</span>
+          <span class="wm-desc" data-scramble>Custom sim-racing hardware &amp; live telemetry actuation</span>
+        </div>
+        <div class="wm-proj">
+          <span class="wm-name" data-scramble>&gt; RADIOGREP</span>
+          <span class="wm-desc" data-scramble>SDR anomaly detection &middot; Random Forest / SMOTE</span>
+        </div>
+        <div class="wm-foot wm-foot-text">
+          <span data-scramble>&#9656; SELECT MODULE FOR FULL SHOWCASE</span>
+        </div>
+      </section>
+
+      <section class="wm-panel" data-panel="contact">
+        <div class="wm-head">
+          <span data-scramble>[ COMM_LINK // UPLINK ]</span>
+        </div>
+        <div class="wm-line"><span data-scramble>&gt; BASE_LOC: Azerbaijan, Baku</span></div>
+        <div class="wm-line">
+          <a class="wm-link" href="mailto:elcanismayilov@proton.me"><span data-scramble>&gt; FREQ_MAIL: elcanismayilov@proton.me</span></a>
+        </div>
+        <div class="wm-line">
+          <a class="wm-link" href="tel:+994503051802"><span data-scramble>&gt; TEL_DIRECT: +994 (50) 305-18-02</span></a>
+        </div>
+        <div class="wm-key" data-scramble>[ CHANNELS ]</div>
+        <div class="wm-links">
+          <a class="wm-link" href="https://www.linkedin.com/in/elcan146" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            <span data-scramble>/in/elcan146</span>
+          <a class="wm-link" href="https://github.com/elcan146" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+            <span data-scramble>/elcan146</span>
+          </a>
+        </div>
+      </section>
+    </div>
+
+    <!-- Return chip — only visible while the scroll sequence plays -->
+    <button class="cockpit-back" id="cockpit-back" type="button">&larr; COCKPIT</button>
+
     <!-- Star Wars Opening Crawl: 3 Sequential Stages -->
     <div class="star-wars-intro" id="star-wars-intro">
       <div class="crawl-shade" id="crawl-shade"></div>
@@ -50,7 +175,7 @@
         </div>
       </div>
 
-      <!-- Project Showcase: space frozen at scroll 9400, text slides with wheel -->
+      <!-- Project Showcase: space frozen at scroll 7900, text slides with wheel -->
       <div class="project-stage" id="project-stage">
         <div class="project-layout">
           <aside class="project-text">
@@ -90,7 +215,7 @@
         </div>
       </div>
 
-      <!-- Project Showcase 2: space frozen at scroll 12000, CEKIGREP centered -->
+      <!-- Project Showcase 2: space frozen at scroll 11100, CEKIGREP centered -->
       <div class="project-stage" id="project2-stage">
         <div class="project-layout">
           <aside class="project-text">
@@ -129,7 +254,7 @@
         </div>
       </div>
 
-      <!-- Project Showcase 3: space frozen at scroll 15900, GRAILS OF WAR -->
+      <!-- Project Showcase 3: space frozen at scroll 14400, GRAILS OF WAR -->
       <div class="project-stage" id="project3-stage">
         <div class="project-layout">
           <aside class="project-text">

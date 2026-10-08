@@ -47,6 +47,12 @@ export default defineConfig({
         if (fs.existsSync(srcVideos)) {
           fs.cpSync(srcVideos, destVideos, { recursive: true });
         }
+
+        const srcCockpit = path.join(process.cwd(), 'cockpit');
+        const destCockpit = path.join(process.cwd(), 'dist', 'cockpit');
+        if (fs.existsSync(srcCockpit)) {
+          fs.cpSync(srcCockpit, destCockpit, { recursive: true });
+        }
       }
     }
   ],

@@ -37,6 +37,7 @@ canvas {
   height: 100%;
 }
 
+
 #space-hud {
   position: fixed;
   top: 18px;
@@ -53,6 +54,596 @@ canvas {
   padding: 6px 12px;
   pointer-events: none;
   user-select: none;
+}
+
+/* --- Cockpit Cutout Anchors ---
+   Elements tagged data-cockpit="<name>" are glued onto a cutout of the
+   cockpit PNG by main.js (position + size written every frame from the
+   WebGL quad's projection). overflow:hidden keeps menu content inside
+   the screen cutout at any viewport size. */
+[data-cockpit] {
+  position: fixed;
+  z-index: 30;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* --- Cockpit Menu ---
+   container-type:size makes cqw/cqh units relative to the screen box itself,
+   so the whole mini-UI scales with the viewport automatically. The blue
+   "glass" itself is a WebGL quad (screenFill in main.js) — this DOM layer
+   is only the terminal UI on top of it. */
+/* Fullscreen white fade that swallows the warp mode-switch */
+#warp-flash {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    #f2f8ff 0%,
+    #b9d8ff 55%,
+    #6490ff 100%
+  );
+}
+
+.cockpit-menu {
+  container-type: size;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 3.5cqh 2.5cqw;
+  font-family: 'Space Mono', monospace;
+  color: #bfe0ff;
+  /* inner glass frame — the "bezel inside the screen" look */
+  box-shadow: inset 0 0 0 1px rgba(140, 200, 255, 0.22),
+    inset 0 0 4cqw rgba(0, 30, 120, 0.4);
+  transition: opacity 0.3s;
+  animation: menuBoot 0.55s cubic-bezier(0.23, 1.2, 0.32, 1) backwards;
+}
+body[data-mode="sequence"] .cockpit-menu {
+  visibility: hidden;
+}
+body.warping .cockpit-menu {
+  opacity: 0;
+}
+
+/* CRT dressing: static scanline grid + one soft beam sweeping down */
+.cockpit-menu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.16) 0 1px,
+    transparent 1px 3px
+  );
+}
+.cockpit-menu::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -15%;
+  height: 12%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(140, 200, 255, 0.14),
+    transparent
+  );
+  animation: menuScan 4.2s linear infinite;
+}
+@keyframes menuScan {
+  to {
+    transform: translateY(1100%);
+  }
+}
+@keyframes menuBoot {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.01);
+  }
+  55% {
+    opacity: 1;
+  }
+  75% {
+    transform: scaleY(1.06);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+.menu-top,
+.menu-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.05cqw;
+  letter-spacing: 0.3em;
+  color: rgba(150, 205, 255, 0.55);
+  user-select: none;
+}
+.caret {
+  animation: caretBlink 1.1s steps(1) infinite;
+}
+@keyframes caretBlink {
+  50% {
+    opacity: 0;
+  }
+}
+
+/* Thin HUD rules with a light pulse traveling across */
+.menu-divider {
+  position: relative;
+  height: 1px;
+  background: rgba(140, 200, 255, 0.28);
+  overflow: hidden;
+}
+.divider-pulse {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 18%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(170, 230, 255, 0.9),
+    transparent
+  );
+  animation: dividerScan 3.4s linear infinite;
+}
+@keyframes dividerScan {
+  from {
+    left: -18%;
+  }
+  to {
+    left: 100%;
+  }
+}
+
+/* Horizontal nav — three equal console panels filling the row */
+.menu-row {
+  display: flex;
+  align-items: stretch;
+  gap: 2cqw;
+  flex: 1;
+  margin: 2.5cqh 0;
+}
+
+.menu-btn {
+  position: relative;
+  flex: 1;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6cqh;
+  color: #a8d4ff;
+  background: rgba(3, 18, 70, 0.4);
+  border: 1px solid rgba(140, 200, 255, 0.4);
+  padding: 1cqw;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, box-shadow 0.2s,
+    transform 0.15s;
+}
+/* hover fill that sweeps in from the left */
+.menu-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(80, 160, 255, 0.16);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+.menu-btn:hover::before,
+.menu-btn:focus-visible::before {
+  transform: scaleX(1);
+}
+.menu-btn:hover {
+  color: #fff;
+  border-color: rgba(160, 220, 255, 0.9);
+  box-shadow: inset 0 0 2cqw rgba(90, 170, 255, 0.35),
+    0 0 1.2cqw rgba(90, 170, 255, 0.25);
+}
+.menu-btn:active {
+  transform: scale(0.96);
+}
+.btn-idx {
+  font-size: 1.15cqw;
+  font-weight: 700;
+  letter-spacing: 0.4em;
+  opacity: 0.6;
+}
+.btn-label {
+  font-size: 3.2cqw;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+}
+.btn-sub {
+  font-size: 1.05cqw;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-indent: 0.25em;
+  opacity: 0.55;
+}
+.menu-btn:hover .btn-label {
+  text-shadow: 0 0 12px rgba(140, 210, 255, 0.95);
+}
+.menu-btn-idle {
+  opacity: 0.45;
+  cursor: default;
+}
+.menu-btn-idle:hover {
+  color: #a8d4ff;
+  border-color: rgba(140, 200, 255, 0.4);
+  box-shadow: none;
+}
+.menu-btn-idle:hover::before {
+  transform: scaleX(0);
+}
+
+/* --- Window Menu ---
+   DOM panel glued onto the windshield trapezoid (windowmenu.png quad in
+   main.js). The PNG supplies the glass border; this layer supplies the
+   text. clip-path mirrors the measured trapezoid silhouette (top edge
+   full width, bottom edge 46%) so glyphs can never spill over the frame,
+   and the content column is capped to ~64% width where the trapezoid is
+   wide enough to hold it. */
+.window-menu {
+  container-type: size;
+  font-family: 'Space Mono', monospace;
+  color: #ffd9a0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+  /* Tilted back about the trapezoid's bottom edge — matches
+     windowmenuPlane.rotation.x so the glass + frame + text lean together
+     like a hologram you're looking down at. */
+  transform: perspective(160cqw) rotateX(9deg);
+  transform-origin: 50% 100%;
+}
+body[data-mode="sequence"] .window-menu {
+  visibility: hidden;
+}
+body.warping .window-menu {
+  opacity: 0;
+}
+
+/* Glowing trapezoid border — vector-effect keeps the stroke a constant
+   2px regardless of the non-uniform viewBox scaling. */
+.wm-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  /* hologram shimmer — cheap opacity flicker, never fully dark */
+  animation: wmFlicker 4s steps(1) infinite;
+}
+@keyframes wmFlicker {
+  0%, 100% { opacity: 1; }
+  7% { opacity: 0.72; }
+  8% { opacity: 1; }
+  41% { opacity: 0.85; }
+  42% { opacity: 1; }
+  43% { opacity: 0.9; }
+  44% { opacity: 1; }
+  78% { opacity: 0.8; }
+  79% { opacity: 1; }
+}
+.wm-frame-glow {
+  fill: none;
+  stroke: rgba(255, 190, 70, 0.4);
+  stroke-width: 7;
+  vector-effect: non-scaling-stroke;
+  filter: blur(5px);
+}
+.wm-frame-line {
+  fill: none;
+  stroke: rgba(255, 205, 105, 0.9);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 6px rgba(255, 180, 60, 0.75));
+}
+
+/* Idle hint — visible until a module is hovered */
+.wm-idle {
+  position: absolute;
+  top: 42%;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 1.5cqw;
+  letter-spacing: 0.45em;
+  text-indent: 0.45em;
+  color: rgba(255, 200, 110, 0.6);
+  text-shadow: 0 0 12px rgba(255, 180, 60, 0.5);
+  animation: wmIdlePulse 2.4s ease-in-out infinite;
+}
+.window-menu[data-active] .wm-idle {
+  display: none;
+}
+@keyframes wmIdlePulse {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.wm-panel {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  /* spread rows across the whole band so the readout fills the
+     trapezoid instead of clustering mid-panel */
+  justify-content: space-between;
+  /* top/bottom padding keeps text inside the visible band — the frame's
+     top edge sits above the viewport on wide screens (cover-fit crop) */
+  padding: 11cqh 5cqw 9cqh;
+  text-align: left;
+  overflow: hidden;
+  /* slightly inside the measured trapezoid silhouette */
+  clip-path: polygon(3.5% 3%, 96.5% 3%, 72.5% 97%, 27.5% 97%);
+  /* fade the bottom so a long list dissolves instead of hard-clipping */
+  -webkit-mask-image: linear-gradient(#000 82%, transparent 96%);
+  mask-image: linear-gradient(#000 82%, transparent 96%);
+}
+/* Rows step inward as they go down so the text block follows the
+   trapezoid slope instead of sitting inside an invisible rectangle.
+   --t is the row index; --step is per-panel (26.8cqw is the full slope
+   inset at the bottom edge, split across row count). */
+.wm-panel > * {
+  --t: 0;
+  margin-inline: calc(var(--t) * var(--step, 4cqw));
+}
+.wm-panel[data-panel="about"] > * { --step: 5.36cqw }
+.wm-panel[data-panel="projects"] > * { --step: 3.8cqw }
+.wm-panel[data-panel="contact"] > * { --step: 5.36cqw }
+.wm-panel > :nth-child(2) { --t: 1 }
+.wm-panel > :nth-child(3) { --t: 2 }
+.wm-panel > :nth-child(4) { --t: 3 }
+.wm-panel > :nth-child(5) { --t: 4 }
+.wm-panel > :nth-child(6) { --t: 5 }
+.wm-panel > :nth-child(7) { --t: 6 }
+.wm-panel > :nth-child(8) { --t: 7 }
+
+/* About + Contact read centered; Projects keeps its left-aligned log style */
+.wm-panel[data-panel="about"],
+.wm-panel[data-panel="contact"] {
+  text-align: center;
+}
+.wm-panel[data-panel="about"] .wm-head,
+.wm-panel[data-panel="contact"] .wm-head,
+.wm-panel[data-panel="contact"] .wm-links {
+  justify-content: center;
+}
+/* About reads 1.2x larger than the other panels */
+.wm-panel[data-panel="about"] .wm-head { font-size: 2.46cqw; }
+.wm-panel[data-panel="about"] .wm-line { font-size: 1.86cqw; }
+.wm-panel[data-panel="about"] .wm-key { font-size: 1.74cqw; }
+.wm-panel[data-panel="about"] .wm-sub { font-size: 1.5cqw; }
+.wm-panel[data-panel="about"] .wm-skill-line { font-size: 1.32cqw; }
+/* centered skills block ignores the stepped inset so wide lines still fit */
+.wm-panel[data-panel="about"] .wm-skills-bottom { margin-inline: 14cqw; }
+.window-menu[data-active] .wm-panel.active {
+  display: flex;
+  animation: wmBoot 0.32s steps(3) both;
+}
+/* Holo scanline field inside the panel */
+.wm-panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(255, 210, 130, 0.05) 0 1px,
+    transparent 1px 4px
+  );
+}
+/* Slow beam sweeping down the readout */
+.wm-panel::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -12%;
+  height: 10%;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(255, 215, 130, 0.14),
+    transparent
+  );
+  animation: wmScan 3.8s linear infinite;
+}
+@keyframes wmScan {
+  to {
+    transform: translateY(1200%);
+  }
+}
+@keyframes wmBoot {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.9);
+    filter: brightness(2.4);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+/* Header bar — bracketed ID left, status right, thin rule beneath */
+.wm-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 2cqw;
+  font-size: 2.05cqw;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #ffd98f;
+  text-shadow: 0 0 14px rgba(255, 190, 60, 0.55);
+  padding-bottom: 0.7cqh;
+  border-bottom: 1px solid rgba(255, 200, 90, 0.3);
+}
+.wm-head-lower {
+  margin-top: 4.5cqh;
+}
+.wm-on {
+  color: #7dff9a;
+  text-shadow: 0 0 10px rgba(90, 255, 140, 0.55);
+}
+.wm-dimtxt {
+  color: rgba(255, 210, 140, 0.55);
+}
+
+.wm-line {
+  font-size: 1.55cqw;
+  line-height: 1.5;
+  letter-spacing: 0.06em;
+  color: #ffd9a0;
+  text-shadow: 0 0 10px rgba(255, 190, 70, 0.35);
+}
+
+.wm-key {
+  font-size: 1.45cqw;
+  letter-spacing: 0.24em;
+  color: #ffc95e;
+  text-shadow: 0 0 10px rgba(255, 190, 60, 0.5);
+}
+div.wm-key {
+  margin-top: 0.6cqh;
+}
+
+.wm-sub {
+  font-size: 1.25cqw;
+  line-height: 1.45;
+  letter-spacing: 0.04em;
+  color: rgba(245, 215, 165, 0.85);
+  text-shadow: 0 0 8px rgba(255, 190, 70, 0.25);
+  white-space: nowrap;
+}
+
+/* Skill matrix centered in the narrow bottom band of the trapezoid */
+.wm-skills-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5cqh;
+  text-align: center;
+}
+.wm-skill-line {
+  font-size: 1.1cqw;
+  line-height: 1.4;
+  letter-spacing: 0.05em;
+  color: rgba(245, 215, 165, 0.85);
+  text-shadow: 0 0 8px rgba(255, 190, 70, 0.25);
+  white-space: nowrap;
+}
+
+/* Footer strip — last row of the spread, sits at the narrow bottom */
+.wm-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw;
+}
+.wm-foot-text {
+  justify-content: center;
+  font-size: 1.3cqw;
+  letter-spacing: 0.3em;
+  color: rgba(255, 210, 140, 0.55);
+}
+
+/* Project rows — single line: amber name + dim warm desc */
+.wm-proj {
+  display: flex;
+  align-items: baseline;
+  gap: 1.6cqw;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.wm-name {
+  flex-shrink: 0;
+  font-size: 1.6cqw;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #ffc95e;
+  text-shadow: 0 0 12px rgba(255, 190, 60, 0.5);
+}
+.wm-desc {
+  font-size: 1.2cqw;
+  letter-spacing: 0.04em;
+  color: rgba(245, 215, 165, 0.7);
+  text-shadow: 0 0 8px rgba(255, 190, 70, 0.2);
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.wm-links {
+  display: flex;
+  gap: 4cqw;
+  margin-top: 0.4cqh;
+}
+.wm-link {
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7em;
+  font-size: 1.5cqw;
+  letter-spacing: 0.08em;
+  color: #ffd9a0;
+  text-decoration: none;
+  text-shadow: 0 0 10px rgba(255, 190, 70, 0.4);
+  transition: color 0.15s, text-shadow 0.15s;
+}
+.wm-link svg {
+  width: 1.9cqw;
+  height: 1.9cqw;
+  fill: currentColor;
+  filter: drop-shadow(0 0 6px rgba(255, 190, 60, 0.6));
+}
+.wm-link:hover {
+  color: #fff3d6;
+  text-shadow: 0 0 16px rgba(255, 220, 140, 0.95);
+}
+.wm-line .wm-link {
+  font-size: inherit;
+  letter-spacing: inherit;
+}
+
+/* Return chip — only shown during the sequence */
+.cockpit-back {
+  position: fixed;
+  left: 22px;
+  bottom: 18px;
+  z-index: 40;
+  display: none;
+  font-family: 'Space Mono', monospace;
+  font-size: 13px;
+  letter-spacing: 0.2em;
+  color: rgba(140, 220, 255, 0.85);
+  background: rgba(2, 6, 14, 0.45);
+  border: 1px solid rgba(75, 242, 255, 0.25);
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+body[data-mode="sequence"] .cockpit-back {
+  display: block;
+}
+.cockpit-back:hover {
+  background: rgba(75, 242, 255, 0.15);
 }
 
 #scroll-hud {
