@@ -425,7 +425,7 @@ body.booting .m-hud {
 }
 .m-id-hello {
   font-family: 'Space Mono', monospace;
-  font-size: 11px;
+  font-size: 14.7px; /* 11px * 1.3 */
   letter-spacing: 0.32em;
   color: var(--cyan);
   text-shadow: 0 0 8px rgba(75, 242, 255, 0.35);
@@ -433,7 +433,7 @@ body.booting .m-hud {
 .m-id-name {
   font-family: 'StarWarsCrawl', 'Space Grotesk', sans-serif;
   font-weight: 400;
-  font-size: clamp(40px, 13.2vw, 76px);
+  font-size: clamp(52px, 17.2vw, 99px); /* 1.3x */
   line-height: 0.98;
   letter-spacing: 3px;
   text-transform: uppercase;
@@ -445,7 +445,7 @@ body.booting .m-hud {
 }
 .m-id-role {
   font-family: 'Space Mono', monospace;
-  font-size: clamp(9.5px, 2.75vw, 12px);
+  font-size: clamp(12.35px, 3.6vw, 15.6px); /* 1.3x */
   letter-spacing: 0.16em;
   color: rgba(190, 225, 255, 0.75);
   max-width: 30ch;
@@ -631,25 +631,20 @@ body.booting .m-term {
   text-shadow: 0 0 30px rgba(255, 223, 64, 0.55);
 }
 
-/* Star Wars crawl — tilted, readable, nudged by scroll via --cp */
+/* Star Wars crawl — flat, readable, nudged by scroll via --cp */
 .m-crawl {
   --cp: 0.5;
-  perspective: 420px;
-  perspective-origin: 50% 0%;
   padding: 6px 2px 10px;
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 100%);
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 100%);
 }
 .m-crawl-inner {
-  transform-origin: 50% 100%;
-  transform: rotateX(14deg) translate3d(0, calc((0.5 - var(--cp)) * 70px), 0);
+  transform: translate3d(0, calc((0.5 - var(--cp)) * 70px), 0);
   font-family: 'StarWarsCrawl', 'Space Grotesk', sans-serif;
   font-size: clamp(19px, 5.5vw, 28px);
   line-height: 1.55;
   letter-spacing: 1px;
   color: #ffe666;
   text-shadow: 0 0 18px rgba(255, 230, 102, 0.45);
-  text-align: center;
+  text-align: justify;
   text-wrap: pretty;
   will-change: transform;
 }
