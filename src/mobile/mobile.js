@@ -152,6 +152,7 @@ function frame(now) {
 
   drawStars(dt, now / 1000);
   updateScrollUI();
+  trackSection(); // scroll events can lag instant jumps — poll instead
 }
 
 function startLoop() {
@@ -389,18 +390,29 @@ const hudSec = $("#m-hud-sec");
 const dock = $(".m-dock");
 const dockLinks = $$(".m-dock a");
 
-const secIO = new IntersectionObserver(
-  (entries) => {
-    for (const e of entries) {
-      if (!e.isIntersecting) continue;
-      const id = e.target.id;
-      if (hudSec) hudSec.textContent = `// ${e.target.dataset.sec}`;
-      dockLinks.forEach((a) => a.classList.toggle("is-on", a.dataset.dock === id));
-    }
-  },
-  { rootMargin: "-45% 0px -50% 0px" }
-);
-$$("[data-sec]").forEach((s) => secIO.observe(s));
+// The last [data-sec] whose top has passed the probe line (~45% viewport)
+// owns the HUD + dock. A thin IO band missed CONTACT whenever the page
+// bottomed out with the probe still inside PROJECTS — tracking on scroll
+// fixes that, and the pinned bottom edge always belongs to the last section.
+const secs = $$("[data-sec]");
+let secCur = null;
+function trackSection() {
+  const probeY = window.innerHeight * 0.45;
+  let cur = secs[0];
+  for (const s of secs) {
+    if (s.getBoundingClientRect().top <= probeY) cur = s;
+    else break;
+  }
+  if (window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 4) {
+    cur = secs[secs.length - 1];
+  }
+  if (!cur || cur === secCur) return;
+  secCur = cur;
+  if (hudSec) hudSec.textContent = `// ${cur.dataset.sec}`;
+  dockLinks.forEach((a) => a.classList.toggle("is-on", a.dataset.dock === cur.id));
+}
+window.addEventListener("scroll", trackSection, { passive: true });
+trackSection();
 
 if (hero) {
   new IntersectionObserver(

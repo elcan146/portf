@@ -1412,3 +1412,222 @@ body.booting #scroll-hud {
   }
 }
 
+/* --- Polish layer ------------------------------------------------- */
+
+::selection {
+  background: rgba(255, 223, 64, 0.85);
+  color: #050505;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 1px solid rgba(140, 230, 255, 0.95);
+  outline-offset: 3px;
+}
+
+/* ESC keycap on the return chip */
+.cb-key {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 1px 5px;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: rgba(140, 220, 255, 0.6);
+  border: 1px solid rgba(140, 220, 255, 0.3);
+  border-radius: 3px;
+  vertical-align: 1px;
+  text-shadow: none;
+}
+
+/* Project counter above each title */
+.project-count {
+  margin-bottom: -0.9rem;
+  font-family: 'Space Mono', monospace;
+  font-size: clamp(0.7rem, 1.15vmin, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.38em;
+  color: rgba(140, 220, 255, 0.7);
+  text-shadow: 0 0 10px rgba(75, 242, 255, 0.3);
+}
+
+/* Sequence rail — vertical flight progress on the right edge */
+#seq-rail {
+  position: fixed;
+  right: clamp(16px, 2vw, 34px);
+  top: 50%;
+  z-index: 40;
+  height: min(42vh, 380px);
+  width: 14px;
+  transform: translateY(-50%);
+  display: none;
+  font-family: 'Space Mono', monospace;
+  animation: rail-in 0.6s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+}
+body[data-mode="sequence"] #seq-rail {
+  display: block;
+}
+@keyframes rail-in {
+  from {
+    opacity: 0;
+    transform: translate(12px, -50%);
+  }
+}
+.rail-track {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(140, 220, 255, 0.18);
+  transform: translateX(-50%);
+}
+.rail-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(75, 242, 255, 0.4), rgba(170, 240, 255, 1));
+  box-shadow: 0 0 8px rgba(75, 242, 255, 0.7);
+  transform: scaleY(0);
+  transform-origin: top center;
+}
+.rail-mark {
+  position: absolute;
+  left: 50%;
+  top: var(--at);
+  width: 26px;
+  height: 26px;
+  margin: -13px 0 0 -13px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+.rail-mark::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border: 1px solid rgba(140, 220, 255, 0.55);
+  background: #020206;
+  transform: translate(-50%, -50%) rotate(45deg);
+  transition: background 0.25s, border-color 0.25s, box-shadow 0.25s, width 0.25s, height 0.25s;
+}
+.rail-mark span {
+  position: absolute;
+  right: 26px;
+  top: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.26em;
+  white-space: nowrap;
+  color: rgba(140, 220, 255, 0.5);
+  transform: translate(6px, -50%);
+  opacity: 0;
+  transition: opacity 0.25s, transform 0.25s, color 0.25s;
+  pointer-events: none;
+}
+.rail-mark.is-on::before {
+  width: 9px;
+  height: 9px;
+  background: rgba(170, 240, 255, 1);
+  border-color: rgba(200, 245, 255, 1);
+  box-shadow: 0 0 10px rgba(75, 242, 255, 0.9);
+}
+#seq-rail:hover .rail-mark span,
+.rail-mark:focus-visible span {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+.rail-mark.is-on span {
+  color: rgba(200, 245, 255, 0.95);
+  text-shadow: 0 0 8px rgba(75, 242, 255, 0.6);
+}
+.rail-mark:hover::before {
+  border-color: rgba(200, 245, 255, 1);
+  box-shadow: 0 0 8px rgba(75, 242, 255, 0.7);
+}
+.rail-mark:hover span {
+  color: #fff;
+}
+
+/* Idle hint — only surfaces after a few seconds without input */
+#scroll-hint {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(18px, 4vh, 40px);
+  z-index: 40;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  color: rgba(170, 230, 255, 0.85);
+  text-shadow: 0 0 10px rgba(75, 242, 255, 0.5);
+  transform: translate(-50%, 8px);
+  opacity: 0;
+  transition: opacity 0.6s ease, transform 0.6s ease;
+  pointer-events: none;
+}
+body[data-mode="sequence"] #scroll-hint {
+  display: flex;
+}
+#scroll-hint.on {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.sh-chev {
+  width: 10px;
+  height: 10px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(45deg);
+  animation: sh-bob 1.6s ease-in-out infinite;
+}
+@keyframes sh-bob {
+  0%, 100% {
+    transform: translateY(-3px) rotate(45deg);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(3px) rotate(45deg);
+    opacity: 1;
+  }
+}
+
+/* Boot skip hint */
+.boot-skip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 6vh;
+  z-index: 3;
+  text-align: center;
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: rgba(140, 220, 255, 0.35);
+  opacity: 0;
+  animation: boot-skip-in 0.8s ease 1.2s forwards;
+  transition: opacity 0.5s ease;
+}
+@keyframes boot-skip-in {
+  to {
+    opacity: 1;
+  }
+}
+#boot-intro.awake .boot-skip,
+#boot-intro.skipping .boot-skip {
+  animation: none;
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sh-chev,
+  #seq-rail {
+    animation: none;
+  }
+}
+

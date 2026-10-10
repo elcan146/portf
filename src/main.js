@@ -1305,7 +1305,6 @@ window.addEventListener("pointermove", (e) => {
     const hitPoint = new THREE.Vector3();
     if (raycaster.ray.intersectPlane(activeDrag.plane, hitPoint)) {
       const targetWorldPos = hitPoint.sub(activeDrag.offset);
-spa
       // Target cosmic coordinate
       const targetCosmic = new THREE.Vector3(
         targetWorldPos.x,
@@ -1501,6 +1500,8 @@ function setSpaceMode(mode, startScroll = 0) {
     freezeOffset = currentScroll - spaceScroll;
     // Kill any in-flight warp and restore the cockpit view state
     warp = null;
+    uniforms.uWarpGlow.value = 0;
+    if (warpFlash) warpFlash.style.opacity = 0;
     cockpitAlphaTarget = 1;
     camera.fov = CAM_FOV;
     camera.updateProjectionMatrix();
@@ -1539,8 +1540,14 @@ function setSpaceMode(mode, startScroll = 0) {
 window.setSpaceMode = setSpaceMode;
 window.getSpaceMode = () => appMode;
 
-// Scene shortcuts used by the cockpit menu buttons
+// Scene shortcuts used by the cockpit menu buttons and the sequence rail
 window.gotoScene = (sceneName) => {
+  // Already flying the sequence? Hop there with the hyperspace spool —
+  // the flash hides the cut, so the rail fill sweeps instead of snapping.
+  if (appMode === "sequence") {
+    startWarp(sceneName);
+    return;
+  }
   if (sceneName === "crawl") setSpaceMode("sequence", 0);
   else if (sceneName === "projects") setSpaceMode("sequence", 6600);
   else if (sceneName === "contact") setSpaceMode("sequence", 16510);
@@ -1548,10 +1555,13 @@ window.gotoScene = (sceneName) => {
 
 // Warp launch: spool FOV + travel speed, fade the cockpit, land in sequence
 function startWarp(sceneName) {
-  if (warp || appMode !== "cockpit") return;
+  // Also fires inside 'sequence' — rail-mark hops ride the same spool
+  // instead of hard-cutting to the target
+  if (warp || (appMode !== "cockpit" && appMode !== "sequence")) return;
   warp = {
     phase: "in",
     t: 0,
+    from: appMode,
     // 6600 = peak of the "Projects" title crawl (full-opacity plateau
     // 6120-7080 inside the 5900-7400 stage-4 window); contact lands just
     // before the 16560 freeze so a nudge of scroll fires the explosion.
@@ -1968,6 +1978,63 @@ window.addEventListener("keyup", (e) => {
   keys[e.key.toLowerCase()] = false;
 });
 
+// --- Sequence rail + idle hint + ESC ---
+const seqRail = document.getElementById("seq-rail");
+const railFill = seqRail?.querySelector(".rail-fill");
+const railMarks = seqRail ? [...seqRail.querySelectorAll(".rail-mark")] : [];
+const scrollHint = document.getElementById("scroll-hint");
+const scrollHintText = scrollHint?.querySelector(".sh-text");
+const SHOWCASE_PARKS = [PROJECT_SCROLL_START, PROJECT2_SCROLL_START, PROJECT3_SCROLL_START];
+const VIDEO_PREFETCH = [
+  [PROJECT_SCROLL_START, projectVideos],
+  [PROJECT2_SCROLL_START, project2Videos],
+  [PROJECT3_SCROLL_START, project3Videos],
+];
+let lastInputAt = performance.now();
+let railActive = "";
+let hintText = "";
+
+["wheel", "pointerdown", "touchmove", "keydown"].forEach((t) =>
+  window.addEventListener(t, () => (lastInputAt = performance.now()), { passive: true })
+);
+railMarks.forEach((b) =>
+  b.addEventListener("click", () => window.gotoScene(b.dataset.jump))
+);
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape" && appMode === "sequence") setSpaceMode("cockpit");
+});
+
+function updateSeqUI(spaceLoop) {
+  if (railFill) {
+    railFill.style.transform = `scaleY(${Math.min(1, spaceLoop / EARTH_FREEZE).toFixed(4)})`;
+  }
+  const active = spaceLoop < 5900 ? "crawl" : spaceLoop < 16000 ? "projects" : "contact";
+  if (active !== railActive) {
+    railActive = active;
+    railMarks.forEach((b) => b.classList.toggle("is-on", b.dataset.jump === active));
+  }
+
+  // Warm up each showcase's videos shortly before space parks there
+  for (const [park, vids] of VIDEO_PREFETCH) {
+    if (spaceLoop > park - 2600 && spaceLoop < park + 200) {
+      vids.forEach((v) => {
+        if (v.preload !== "auto") v.preload = "auto";
+      });
+    }
+  }
+
+  if (!scrollHint) return;
+  const parked = SHOWCASE_PARKS.some((p) => Math.abs(spaceLoop - p) < 2);
+  const text = parked ? "SCROLL TO READ \u00b7 FLICK TO SKIP" : "SCROLL TO TRAVEL";
+  if (text !== hintText) {
+    hintText = text;
+    scrollHintText.textContent = text;
+  }
+  const idle = performance.now() - lastInputAt > 3200;
+  const show = idle && !warp && !contactReveal?.classList.contains("on");
+  scrollHint.classList.toggle("on", show);
+}
+
 function handleKeyboard() {
   const speed = keys["shift"] ? 35 : 12;
   if (keys["arrowup"] || keys["w"]) {
@@ -2036,35 +2103,37 @@ function animate(currentTime) {
     warp.t += delta;
     if (warp.phase === "in") {
       const k = Math.min(1, warp.t / WARP_IN_S);
-      // Hold opacity through the pinch — fade only in the last
-      // stretch of warp-in so the flash hides the cut
-      cockpitAlpha = 1 - THREE.MathUtils.smoothstep(k, 0.75, 1.0);
-      cockpitAlphaTarget = cockpitAlpha;
-      // DOM menu fades on its own earlier curve — gone by mid warp-in
-      if (cockpitMenu)
-        cockpitMenu.style.opacity = String(
-          1 - THREE.MathUtils.smoothstep(k, 0.0, 0.5)
-        );
       const spoolK = THREE.MathUtils.smoothstep(k, 0.1, 1.0);
       const e = spoolK * spoolK; // ease-in: acceleration feels like a spool
+      if (warp.from === "cockpit") {
+        // Hold opacity through the pinch — fade only in the last
+        // stretch of warp-in so the flash hides the cut
+        cockpitAlpha = 1 - THREE.MathUtils.smoothstep(k, 0.75, 1.0);
+        cockpitAlphaTarget = cockpitAlpha;
+        // DOM menu fades on its own earlier curve — gone by mid warp-in
+        if (cockpitMenu)
+          cockpitMenu.style.opacity = String(
+            1 - THREE.MathUtils.smoothstep(k, 0.0, 0.5)
+          );
+        // The cockpit stretches like a fisheye lens: widen the focal
+        // angle AND scale the quad up to compensate so the frame edges
+        // stay pinned — then the pinch sucks the image toward a
+        // vanishing point, like the Photoshop pinch filter
+        const ckFov = COCKPIT_FOV + (COCKPIT_WARP_FOV - COCKPIT_FOV) * e;
+        cockpitCamera.fov = ckFov;
+        cockpitCamera.updateProjectionMatrix();
+        const fovScale =
+          Math.tan(THREE.MathUtils.degToRad(ckFov / 2)) /
+          Math.tan(THREE.MathUtils.degToRad(COCKPIT_FOV / 2));
+        cockpitPlane.scale.set(
+          cockpitBaseScale.x * fovScale,
+          cockpitBaseScale.y * fovScale,
+          1
+        );
+        setCockpitPinch(e * 0.08); // suck the image toward a vanishing point
+      }
       camera.fov = CAM_FOV + (WARP_FOV - CAM_FOV) * e;
       camera.updateProjectionMatrix();
-      // The cockpit stretches like a fisheye lens: widen the focal
-      // angle AND scale the quad up to compensate so the frame edges
-      // stay pinned — then the pinch sucks the image toward a
-      // vanishing point, like the Photoshop pinch filter
-      const ckFov = COCKPIT_FOV + (COCKPIT_WARP_FOV - COCKPIT_FOV) * e;
-      cockpitCamera.fov = ckFov;
-      cockpitCamera.updateProjectionMatrix();
-      const fovScale =
-        Math.tan(THREE.MathUtils.degToRad(ckFov / 2)) /
-        Math.tan(THREE.MathUtils.degToRad(COCKPIT_FOV / 2));
-      cockpitPlane.scale.set(
-        cockpitBaseScale.x * fovScale,
-        cockpitBaseScale.y * fovScale,
-        1
-      );
-      setCockpitPinch(e * 0.08); // suck the image toward a vanishing point
       targetScroll += WARP_BOOST * e * (delta * 60);
       uniforms.uWarpGlow.value = spoolK * 2.0;
       if (warpFlash)
@@ -2320,8 +2389,10 @@ function animate(currentTime) {
     eu.uGlow.value = explodeT * (1 - driftT) + endFlash;
     eu.uDissolve.value = dissolveT;
     if (contactReveal) {
-      // Space sequence only — the card must never bleed into the cockpit
-      const showCard = appMode === "sequence" ? dissolveT : 0;
+      // Space sequence only — the card must never bleed into the cockpit.
+      // The !warp guard stops rail hops: the warp-in surge sweeps
+      // earthDrive past 17140 and the card bloomed mid-flight.
+      const showCard = appMode === "sequence" && !warp ? dissolveT : 0;
       contactReveal.style.opacity = showCard.toFixed(3);
       const active = showCard > 0.5;
       if (active !== contactReveal.classList.contains("on")) {
@@ -2360,6 +2431,7 @@ function animate(currentTime) {
     // Camera turns are driven by SPACE position so they always match what
     // the starfield actually shows, regardless of scroll state.
     const spaceLoop = ((spaceScroll % loopDepth) + loopDepth) % loopDepth;
+    updateSeqUI(spaceLoop);
     // Turns 90 degrees left as the crawl exits (space 5900→7900)
     const camPan = THREE.MathUtils.smoothstep(spaceLoop, 5900, 7900);
     camera.rotation.y += camPan * (Math.PI / 2);

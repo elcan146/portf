@@ -179,8 +179,19 @@
       <div id="fo4-compass" aria-hidden="true">
         <div class="fo4-center"></div>
       </div>
-      <button class="cockpit-back" id="cockpit-back" type="button"><span class="cb-sheen"></span><span class="cb-arrow">&larr;</span>COCKPIT</button>
+      <button class="cockpit-back" id="cockpit-back" type="button"><span class="cb-sheen"></span><span class="cb-arrow">&larr;</span>COCKPIT<span class="cb-key">ESC</span></button>
     </div>
+
+    <!-- Sequence rail: where you are in the flight + quick jumps -->
+    <nav id="seq-rail" aria-label="Sequence">
+      <div class="rail-track"><div class="rail-fill"></div></div>
+      <button class="rail-mark" data-jump="crawl" style="--at: 0%" type="button"><span>ABOUT</span></button>
+      <button class="rail-mark" data-jump="projects" style="--at: 40%" type="button"><span>PROJECTS</span></button>
+      <button class="rail-mark" data-jump="contact" style="--at: 100%" type="button"><span>CONTACT</span></button>
+    </nav>
+
+    <!-- Idle hint: tells first-time visitors how to fly -->
+    <div id="scroll-hint" aria-hidden="true"><span class="sh-text">SCROLL TO TRAVEL</span><span class="sh-chev"></span></div>
 
     <!-- Boot intro: typewriter in the dark, then eyelids flutter open -->
     <div id="boot-intro" aria-hidden="true">
@@ -190,6 +201,7 @@
           <span class="boot-typed"></span><span class="boot-caret"></span>
         </span>
       </div>
+      <div class="boot-skip">CLICK OR PRESS ANY KEY TO SKIP</div>
     </div>
 
     <!-- Star Wars Opening Crawl: 3 Sequential Stages -->
@@ -229,6 +241,7 @@
         <div class="project-layout">
           <aside class="project-text">
             <div class="project-text-inner" id="project-text-inner">
+              <span class="project-count">PROJECT 01 / 03</span>
               <h2 class="project-title">CEKICLIP V2</h2>
               <h3 class="project-subtitle">AUTOMATED AI VIDEO PIPELINE</h3>
               <p class="project-p">
@@ -258,8 +271,8 @@
           </aside>
 
           <div class="project-videos">
-            <video class="project-video project-video-main" src="/videos/cekiclip30s.mp4" muted loop playsinline></video>
-            <video class="project-video project-video-side" src="/videos/reel.mp4" muted loop playsinline></video>
+            <video class="project-video project-video-main" src="/videos/cekiclip30s.mp4" poster="/videos/m/cekiclip30s.jpg" preload="none" muted loop playsinline></video>
+            <video class="project-video project-video-side" src="/videos/reel.mp4" poster="/videos/m/reel.jpg" preload="none" muted loop playsinline></video>
           </div>
         </div>
       </div>
@@ -269,6 +282,7 @@
         <div class="project-layout">
           <aside class="project-text">
             <div class="project-text-inner" id="project2-text-inner">
+              <span class="project-count">PROJECT 02 / 03</span>
               <h2 class="project-title">CEKIGREP</h2>
               <h3 class="project-subtitle">NATIONAL SPECTRUM OVERSIGHT</h3>
               <p class="project-p">
@@ -298,7 +312,7 @@
           </aside>
 
           <div class="project-videos project2-videos">
-            <video class="project-video project-video-main" src="/videos/cekigrep.mp4" muted loop playsinline></video>
+            <video class="project-video project-video-main" src="/videos/cekigrep.mp4" poster="/videos/m/cekigrep.jpg" preload="none" muted loop playsinline></video>
           </div>
         </div>
       </div>
@@ -308,6 +322,7 @@
         <div class="project-layout">
           <aside class="project-text">
             <div class="project-text-inner" id="project3-text-inner">
+              <span class="project-count">PROJECT 03 / 03</span>
               <h2 class="project-title">GRAILS OF WAR</h2>
               <p class="project-p">
                 A complete digital card game designed, engineered, and shipped entirely solo. A fusion of strategic resource management and high-variance mechanics, built across web and native mobile platforms.
@@ -336,8 +351,8 @@
           </aside>
 
           <div class="project-videos project3-videos">
-            <video class="project-video project-video-main" src="/videos/grailsofwar_pc.mp4" muted loop playsinline></video>
-            <video class="project-video project-video-side" src="/videos/grailsofwar_mobile.mp4" muted loop playsinline></video>
+            <video class="project-video project-video-main" src="/videos/grailsofwar_pc.mp4" poster="/videos/m/grailsofwar_pc.jpg" preload="none" muted loop playsinline></video>
+            <video class="project-video project-video-side" src="/videos/grailsofwar_mobile.mp4" poster="/videos/m/grailsofwar_mobile.jpg" preload="none" muted loop playsinline></video>
           </div>
         </div>
       </div>

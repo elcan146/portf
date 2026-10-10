@@ -45,6 +45,9 @@ body {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   overflow-x: hidden;
   overscroll-behavior-y: none;
+  /* Zoom the whole mobile site in by 40% (scales all lengths,
+     including fixed HUD/dock and svh-based sizes). */
+  zoom: 1.4;
 }
 body.booting {
   overflow: hidden;
@@ -820,34 +823,6 @@ body.booting .m-term {
   width: auto;
   height: min(64svh, 600px);
   max-width: 100%;
-}
-.m-rec {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  font-family: 'Space Mono', monospace;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.22em;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 3px;
-  pointer-events: none;
-}
-.m-rec i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-}
-.m-screen.is-playing .m-rec i {
-  background: #ff4d4d;
-  box-shadow: 0 0 8px #ff4d4d;
-  animation: m-blink 1.2s steps(1) infinite;
 }
 .m-play {
   position: absolute;
