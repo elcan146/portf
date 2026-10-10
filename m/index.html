@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#020206" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Elcan Ismayilov — Systems Architecture &amp; Full Stack Software Engineer." />
+    <title>Elcan Ismayilov \\ Portfolio</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600&family=Space+Mono:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/mobile/mobile.css" />
+    <script>document.documentElement.classList.add("js");</script>
+  </head>
+  <body class="booting">
+    <canvas id="m-stars" aria-hidden="true"></canvas>
+    <div id="m-flash" aria-hidden="true"></div>
+
+    <!-- Boot intro: typewriter in the dark, tap to skip -->
+    <div id="m-boot" aria-hidden="true">
+      <div class="m-boot-type">
+        <span class="m-boot-ghost">A long time ago in a galaxy far, far away....</span>
+        <span class="m-boot-live"><span><span class="m-boot-typed"></span><span class="m-boot-caret"></span></span></span>
+      </div>
+      <div class="m-boot-skip">TAP TO SKIP</div>
+    </div>
+
+    <!-- Top HUD strip -->
+    <header class="m-hud">
+      <a class="m-hud-id" href="#top">&#9701; ELCAN.SYS</a>
+      <span class="m-hud-sec" id="m-hud-sec">// NAV TERMINAL</span>
+      <span class="m-hud-bar"><span id="m-hud-progress"></span></span>
+    </header>
+
+    <main>
+      <!-- HERO: the cockpit, re-stacked for a tall screen -->
+      <section class="m-hero" id="top" data-sec="NAV TERMINAL">
+        <div class="m-holo" aria-hidden="true">
+          <svg class="m-holo-grid" viewBox="0 0 800 500" preserveAspectRatio="none">
+            <g class="m-grid-rays"></g>
+            <g class="m-grid-rows"></g>
+          </svg>
+          <svg class="m-holo-frame" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <polygon class="m-holo-glow" points="1.2,1.5 98.8,1.5 72.6,98.5 27.4,98.5" />
+            <polygon class="m-holo-line" points="1.2,1.5 98.8,1.5 72.6,98.5 27.4,98.5" />
+          </svg>
+          <div class="m-figure" id="m-figure"></div>
+        </div>
+
+        <div class="m-id">
+          <span class="m-id-hello" data-scramble>&gt; HELLO, I'M</span>
+          <h1 class="m-id-name"><span>Elcan</span> <span>Ismayilov</span></h1>
+          <span class="m-id-role" data-scramble>SYSTEMS ARCHITECTURE &amp; FULL-STACK ENGINEER</span>
+        </div>
+
+        <nav class="m-term" aria-label="Sections">
+          <div class="m-term-top">
+            <span>// NAV TERMINAL //</span>
+            <span>PWR &#9646;&#9646;&#9646; V2.7</span>
+          </div>
+          <div class="m-divider"><span></span></div>
+          <a class="m-term-btn" href="#about" data-warp>
+            <span class="m-term-idx">[ 01 ]</span>
+            <span class="m-term-label">ABOUT ME</span>
+            <span class="m-term-sub">INTRO SEQUENCE</span>
+            <span class="m-term-arrow" aria-hidden="true">&#8250;</span>
+          </a>
+          <a class="m-term-btn" href="#projects" data-warp>
+            <span class="m-term-idx">[ 02 ]</span>
+            <span class="m-term-label">PROJECTS</span>
+            <span class="m-term-sub">SHOWCASE REEL</span>
+            <span class="m-term-arrow" aria-hidden="true">&#8250;</span>
+          </a>
+          <a class="m-term-btn" href="#contact" data-warp>
+            <span class="m-term-idx">[ 03 ]</span>
+            <span class="m-term-label">CONTACT</span>
+            <span class="m-term-sub">COMM LINK</span>
+            <span class="m-term-arrow" aria-hidden="true">&#8250;</span>
+          </a>
+          <div class="m-divider"><span></span></div>
+          <div class="m-term-bottom">
+            <span>SYS READY <span class="m-caret">&#9646;</span></span>
+            <span>SCROLL &#9660;</span>
+          </div>
+        </nav>
+      </section>
+
+      <!-- ABOUT -->
+      <section class="m-sec" id="about" data-sec="01 ABOUT">
+        <div class="m-sec-head" data-reveal>
+          <span class="m-sec-idx">[ 01 ]</span>
+          <h2 class="m-sec-title">About Me</h2>
+          <div class="m-divider"><span></span></div>
+        </div>
+
+        <div class="m-crawl" data-reveal>
+          <div class="m-crawl-inner">
+            <p class="m-crawl-lead">I'm a Systems Architecture &amp; Full Stack Software Engineer.</p>
+            <p>
+              Fully committed to the philosophy of continuous innovation, I’m a full stack developer with a deep passion for React, backend architecture, and building specialized systems.
+            </p>
+            <p>
+              The unique challenge of merging clean logic with complex data—from enterprise applications to RF spectrum monitoring—drives my excitement for software engineering.
+            </p>
+          </div>
+        </div>
+
+        <div class="m-panel" data-reveal data-decode>
+          <div class="m-panel-head"><span data-scramble>[ SYS_ID: ELCAN_ISMAYILOV ]</span></div>
+          <div class="m-panel-line"><span data-scramble>&gt; ROLE_CLASS: FULL-STACK &amp; TELECOMMUNICATIONS ENGINEER</span></div>
+          <div class="m-panel-key" data-scramble>[ ACADEMIC_UPLINK ]</div>
+          <div class="m-panel-sub"><span data-scramble>&#9500; MSc Information Security (AzTU)</span></div>
+          <div class="m-panel-sub"><span data-scramble>&#9492; BSc Telecommunications (NAA)</span></div>
+          <div class="m-panel-key" data-scramble>[ SKILL_MATRIX ]</div>
+          <ul class="m-chips">
+            <li>Python</li><li>JavaScript/JSX</li><li>SQL</li><li>React 19</li><li>Vite</li>
+            <li>FastAPI</li><li>PostgreSQL</li><li>SQLAlchemy</li><li>WebSockets</li><li>REST</li>
+            <li>WebAuthn</li><li>JWT</li><li>RBAC</li><li>FFmpeg</li><li>Google GenAI</li>
+            <li>Docker</li><li>AWS</li><li>GCP</li><li>Cloudflare</li><li>WAF</li><li>Shell</li>
+            <li>Scikit-learn</li><li>Pandas</li><li>NumPy</li><li>NLP</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section class="m-sec" id="projects" data-sec="02 PROJECTS">
+        <div class="m-sec-head" data-reveal>
+          <span class="m-sec-idx">[ 02 ]</span>
+          <h2 class="m-sec-title">Projects</h2>
+          <div class="m-divider"><span></span></div>
+        </div>
+
+        <!-- CEKICLIP V2 -->
+        <article class="m-proj" data-reveal>
+          <div class="m-media" data-media>
+            <div class="m-tabs" role="tablist">
+              <button class="m-tab is-on" type="button" role="tab" aria-selected="true" data-tab="0">PIPELINE</button>
+              <button class="m-tab" type="button" role="tab" aria-selected="false" data-tab="1">REEL</button>
+            </div>
+            <div class="m-screen">
+              <video class="m-video is-on" data-src="/videos/m/cekiclip30s.mp4" poster="/videos/m/cekiclip30s.jpg" muted loop playsinline preload="none" style="aspect-ratio: 1796 / 1080"></video>
+              <video class="m-video m-video-tall" data-src="/videos/m/reel.mp4" poster="/videos/m/reel.jpg" muted loop playsinline preload="none" style="aspect-ratio: 1080 / 1920"></video>
+              <span class="m-rec"><i></i>FEED 01</span>
+              <button class="m-play" type="button" aria-label="Play video"><span>&#9654;</span></button>
+            </div>
+          </div>
+          <div class="m-proj-body">
+            <h3 class="m-proj-title">Cekiclip V2</h3>
+            <p class="m-proj-sub">AUTOMATED AI VIDEO PIPELINE</p>
+            <p class="m-proj-p">
+              An autonomous desktop application engineered to transform full-length media into optimized, viral short-form content.
+            </p>
+            <details class="m-acc">
+              <summary>THE ARCHITECTURE</summary>
+              <p>Built on a modular, multi-threaded Python backend. Paired with a custom PyQt6 interface to manage heavy asynchronous workloads with zero UI latency.</p>
+            </details>
+            <details class="m-acc">
+              <summary>THE AI PIPELINE</summary>
+              <p>Powered by a multi-model infrastructure. OpenAI Whisper maps precise word-level transcription. Google Gemini identifies high-impact moments. Edge-TTS generates dynamic voiceovers.</p>
+            </details>
+            <details class="m-acc">
+              <summary>THE ENGINE</summary>
+              <p>A custom FFmpeg rendering engine handles the visual transformation. GPU-accelerated Demucs isolates vocals. Automated systems apply 9:16 aspect ratios, animated typography, and Content-ID mitigation.</p>
+            </details>
+            <details class="m-acc">
+              <summary>THE DEPLOYMENT</summary>
+              <p>Seamlessly integrated with YouTube Data and Analytics APIs. Handling automated OAuth uploads, scheduled publishing, and real-time hardware telemetry.</p>
+            </details>
+          </div>
+        </article>
+
+        <!-- CEKIGREP -->
+        <article class="m-proj" data-reveal>
+          <div class="m-media" data-media>
+            <div class="m-screen">
+              <video class="m-video is-on" data-src="/videos/m/cekigrep.mp4" poster="/videos/m/cekigrep.jpg" muted loop playsinline preload="none" style="aspect-ratio: 2162 / 1080"></video>
+              <span class="m-rec"><i></i>FEED 02</span>
+              <button class="m-play" type="button" aria-label="Play video"><span>&#9654;</span></button>
+            </div>
+          </div>
+          <div class="m-proj-body">
+            <h3 class="m-proj-title">Cekigrep</h3>
+            <p class="m-proj-sub">NATIONAL SPECTRUM OVERSIGHT</p>
+            <p class="m-proj-p">
+              A specialized SIGINT and spectrum monitoring platform engineered to track, analyze, and secure the national radio frequency landscape.
+            </p>
+            <details class="m-acc">
+              <summary>THE HARDWARE PIPELINE</summary>
+              <p>Ingesting raw spectrum data via RTL-SDR, HTOOL SDR 6, NRSP-ST, and SDRuno receivers. A custom digital signal processing engine executes precise FFTs to instantly detect jamming, interference, and cross-border anomalies.</p>
+            </details>
+            <details class="m-acc">
+              <summary>THE DATA ARCHITECTURE</summary>
+              <p>Built for zero-latency telemetry. Tens of millions of historical sweep records are aggressively optimized through in-memory ring buffers and recursive PostgreSQL queries, streaming live spectrum arrays at 4Hz over WebSockets.</p>
+            </details>
+            <details class="m-acc">
+              <summary>THE TACTICAL INTERFACE</summary>
+              <p>A real-time 3D React command center powered by WebGL shaders and live data waterfalls. Protected by a zero-trust FIDO2 WebAuthn security model and featuring an embedded AI assistant for natural-language database querying.</p>
+            </details>
+            <details class="m-acc">
+              <summary>THE DEPLOYMENT</summary>
+              <p>Operating across seven regional nodes. Monitoring over 400 frequency-transmitter mappings to ensure broadcast integrity, automate outage alerting, and classify RF intent across the digital frontier.</p>
+            </details>
+          </div>
+        </article>
+
+        <!-- GRAILS OF WAR -->
+        <article class="m-proj" data-reveal>
+          <div class="m-media" data-media>
+            <div class="m-tabs" role="tablist">
+              <button class="m-tab is-on" type="button" role="tab" aria-selected="true" data-tab="0">MOBILE</button>
+              <button class="m-tab" type="button" role="tab" aria-selected="false" data-tab="1">PC</button>
+            </div>
+            <div class="m-screen">
+              <video class="m-video m-video-tall is-on" data-src="/videos/m/grailsofwar_mobile.mp4" poster="/videos/m/grailsofwar_mobile.jpg" muted loop playsinline preload="none" style="aspect-ratio: 1080 / 2400"></video>
+              <video class="m-video" data-src="/videos/m/grailsofwar_pc.mp4" poster="/videos/m/grailsofwar_pc.jpg" muted loop playsinline preload="none" style="aspect-ratio: 2162 / 1080"></video>
+              <span class="m-rec"><i></i>FEED 03</span>
+              <button class="m-play" type="button" aria-label="Play video"><span>&#9654;</span></button>
+            </div>
+          </div>
+          <div class="m-proj-body">
+            <h3 class="m-proj-title">Grails of War</h3>
+            <p class="m-proj-sub">CROSS-PLATFORM CARD GAME</p>
+            <p class="m-proj-p">
+              A complete digital card game designed, engineered, and shipped entirely solo. A fusion of strategic resource management and high-variance mechanics, built across web and native mobile platforms.
+            </p>
+            <details class="m-acc">
+              <summary>THE ARCHITECTURE</summary>
+              <p>Powered by a custom, framework-agnostic TypeScript engine. Core state transitions operate entirely decoupled from the UI using a draft-mutation pattern, allowing the exact same deterministic game logic to drive both a React web client and a native Expo application.</p>
+            </details>
+            <details class="m-acc">
+              <summary>THE ENGINE</summary>
+              <p>A specialized effects layer resolves complex card abilities, resurrection hooks, and 30 unique location modifiers. The engine operates purely headlessly, communicating with the render layer strictly through transient event queues while a probability-driven AI evaluates optimal plays.</p>
+            </details>
+            <details class="m-acc">
+              <summary>THE CONTENT PIPELINE</summary>
+              <p>Engineered a custom data pipeline to manage scale. Node and Python code generators parse plain-text design documents, compiling 214 unique cards, 8 factions, and extensive lore directly into strictly typed code—ensuring a single source of truth.</p>
+            </details>
+            <details class="m-acc">
+              <summary>THE PRESENTATION</summary>
+              <p>Rendered through a bespoke gothic-CRT aesthetic. Phaser 4 orchestrates animated board states bridged seamlessly to a React DOM, backed by a dual-mode low-latency audio architecture and an integrated original soundtrack player.</p>
+            </details>
+          </div>
+        </article>
+
+        <!-- Other modules — the window-menu project list -->
+        <div class="m-panel" data-reveal data-decode>
+          <div class="m-panel-head"><span data-scramble>[ OTHER_MODULES ]</span></div>
+          <div class="m-mod">
+            <span class="m-mod-name" data-scramble>&gt; AZTRONICS</span>
+            <span class="m-mod-desc">Custom sim-racing hardware &amp; live telemetry actuation</span>
+          </div>
+          <div class="m-mod">
+            <span class="m-mod-name" data-scramble>&gt; RADIOGREP</span>
+            <span class="m-mod-desc">SDR anomaly detection &middot; Random Forest / SMOTE</span>
+          </div>
+          <div class="m-mod">
+            <span class="m-mod-name" data-scramble>&gt; SEWFORMER [WIP]</span>
+            <span class="m-mod-desc">Blender plugin development</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="m-sec m-contact" id="contact" data-sec="03 CONTACT">
+        <div class="m-sec-head" data-reveal>
+          <span class="m-sec-idx">[ 03 ]</span>
+          <h2 class="m-sec-title">Contact</h2>
+          <div class="m-divider"><span></span></div>
+        </div>
+
+        <div class="m-contact-card" data-reveal data-decode>
+          <p class="m-contact-name">Elcan Ismayilov</p>
+          <p class="m-contact-loc"><span data-scramble>&gt; BASE_LOC: Azerbaijan, Baku</span></p>
+          <div class="m-links">
+            <a class="m-link" href="tel:+994503051802">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>
+              <span class="m-link-text"><span class="m-link-label">PHONE</span><span class="m-link-value" data-scramble>+994 50 305 18 02</span></span>
+              <span class="m-link-arrow" aria-hidden="true">&#8250;</span>
+            </a>
+            <a class="m-link" href="mailto:elcanismayilov@proton.me">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4.2-8 5-8-5V6l8 5 8-5z"/></svg>
+              <span class="m-link-text"><span class="m-link-label">MAIL</span><span class="m-link-value" data-scramble>elcanismayilov@proton.me</span></span>
+              <span class="m-link-arrow" aria-hidden="true">&#8250;</span>
+            </a>
+            <a class="m-link" href="https://www.linkedin.com/in/elcan146" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+              <span class="m-link-text"><span class="m-link-label">LINKEDIN</span><span class="m-link-value" data-scramble>/in/elcan146</span></span>
+              <span class="m-link-arrow" aria-hidden="true">&#8250;</span>
+            </a>
+            <a class="m-link" href="https://github.com/elcan146" target="_blank" rel="noopener">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+              <span class="m-link-text"><span class="m-link-label">GITHUB</span><span class="m-link-value" data-scramble>/elcan146</span></span>
+              <span class="m-link-arrow" aria-hidden="true">&#8250;</span>
+            </a>
+          </div>
+        </div>
+
+        <footer class="m-foot">
+          <a class="m-foot-btn" href="#top" data-warp>&#9650; BACK TO COCKPIT</a>
+          <a class="m-foot-link" href="/?desktop=1">VIEW FULL 3D DESKTOP EXPERIENCE &#8250;</a>
+          <span class="m-foot-sys">&#9701; ELCAN.SYS &middot; V2.7 &middot; MOBILE LINK</span>
+        </footer>
+      </section>
+    </main>
+
+    <!-- Bottom dock — thumb-zone nav, appears once the hero scrolls away -->
+    <nav class="m-dock" aria-label="Quick navigation">
+      <a href="#about" data-dock="about"><span>01</span>ABOUT</a>
+      <a href="#projects" data-dock="projects"><span>02</span>PROJECTS</a>
+      <a href="#contact" data-dock="contact"><span>03</span>CONTACT</a>
+    </nav>
+
+    <script type="module" src="/src/mobile/mobile.js"></script>
+  </body>
+</html>

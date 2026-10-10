@@ -56,6 +56,14 @@ export default defineConfig({
       }
     }
   ],
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(process.cwd(), 'index.html'),
+        mobile: path.resolve(process.cwd(), 'm/index.html'),
+      },
+    },
+  },
   server: {
     host: true,
     port: 5173,

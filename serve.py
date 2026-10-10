@@ -26,6 +26,7 @@ cloudflared tunnel selection order:
 
 import argparse
 import os
+import re
 import shlex
 import shutil
 import signal
@@ -41,6 +42,10 @@ from http.server import SimpleHTTPRequestHandler
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DIST_DIR = os.path.join(ROOT, "dist")
 CONFIG_YML = os.path.join(ROOT, "cloudflared.yml")
+PHONE_UA = re.compile(
+    r"iPhone|iPod|Windows Phone|BlackBerry|Opera Mini|IEMobile|Mobile.*Firefox|Android.*Mobile",
+    re.I,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -74,7 +79,31 @@ class SPARequestHandler(SimpleHTTPRequestHandler):
             self.send_header("Cache-Control", "public, max-age=3600")
         super().end_headers()
 
+    def _wants_mobile(self, query: str) -> bool:
+        # ?desktop=1 or the remembered opt-out cookie keeps the 3D site
+        if re.search(r"(^|&)desktop=1(&|$)", query):
+            return False
+        if "viewMode=desktop" in (self.headers.get("Cookie") or ""):
+            return False
+        if self.headers.get("Sec-CH-UA-Mobile") == "?1":
+            return True
+        return bool(PHONE_UA.search(self.headers.get("User-Agent") or ""))
+
     def send_head(self):
+        raw_path, _, query = self.path.partition("?")
+        host = (self.headers.get("Host") or "").lower()
+        if raw_path in ("/", "/index.html"):
+            # m.<domain> serves the mobile layout at its root
+            if host.startswith("m."):
+                self.path = "/m/index.html"
+            # Phones are redirected before any desktop bytes are sent
+            elif self._wants_mobile(query):
+                self.send_response(302)
+                self.send_header("Location", "/m/")
+                self.send_header("Vary", "User-Agent, Cookie")
+                self.send_header("Content-Length", "0")
+                self.end_headers()
+                return None
         # SPA fallback: extensionless paths that don't map to a file -> index.html
         path = self.translate_path(self.path)
         if not os.path.exists(path) and "." not in os.path.basename(self.path.split("?", 1)[0]):

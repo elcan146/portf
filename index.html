@@ -3,6 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Phones get the dedicated mobile layout (/m/) before the heavy 3D
+      // bundle loads. ?desktop=1 opts out and is remembered.
+      (function () {
+        try {
+          if (/[?&]desktop=1\b/.test(location.search)) {
+            localStorage.setItem("viewMode", "desktop");
+            document.cookie = "viewMode=desktop; path=/; max-age=31536000; SameSite=Lax";
+            return;
+          }
+          if (localStorage.getItem("viewMode") === "desktop") return;
+          if (/(^|;\s*)viewMode=desktop/.test(document.cookie)) return;
+          var ua = navigator.userAgent;
+          var phone =
+            /iPhone|iPod|Windows Phone|BlackBerry|Opera Mini|IEMobile|Mobile.*Firefox|Android.*Mobile/i.test(ua) ||
+            (navigator.userAgentData && navigator.userAgentData.mobile === true);
+          if (!phone && window.matchMedia("(pointer: coarse)").matches) {
+            phone = Math.min(screen.width, screen.height) < 600;
+          }
+          if (phone) location.replace("/m/" + location.hash);
+        } catch (e) {}
+      })();
+    </script>
     <title>Elcan Ismayilov \\ Portofilo</title>
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
