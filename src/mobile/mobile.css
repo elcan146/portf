@@ -22,6 +22,7 @@
   --safe-l: env(safe-area-inset-left, 0px);
   --safe-r: env(safe-area-inset-right, 0px);
   --hud-h: 44px;
+  --z: 1.5; /* whole-site zoom — divide svh heights by this */
 }
 
 * {
@@ -45,9 +46,9 @@ body {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   overflow-x: hidden;
   overscroll-behavior-y: none;
-  /* Zoom the whole mobile site in by 40% (scales all lengths,
+  /* Zoom the whole mobile site in by 50% (scales all lengths,
      including fixed HUD/dock and svh-based sizes). */
-  zoom: 1.4;
+  zoom: var(--z);
 }
 body.booting {
   overflow: hidden;
@@ -270,7 +271,9 @@ body.booting .m-hud {
 /* ---------- HERO (re-stacked cockpit) ---------- */
 .m-hero {
   position: relative;
-  min-height: 100svh;
+  /* /var(--z) undoes the zoom on svh — the hero stays exactly one
+     real screen instead of 150%, no dead space around the trapezoid */
+  min-height: calc(100svh / var(--z));
   max-width: 560px;
   margin: 0 auto;
   display: flex;
