@@ -1,4 +1,4 @@
-@font-face {
+﻿@font-face {
   font-family: 'StarWarsCrawl';
   src: url('/font/text.woff2') format('woff2');
   font-weight: normal;
@@ -38,6 +38,11 @@ canvas {
 }
 
 
+/* Debug readouts disabled — corners stay clean */
+#space-hud,
+#scroll-hud {
+  display: none;
+}
 #space-hud {
   position: fixed;
   top: 18px;
@@ -71,7 +76,7 @@ canvas {
 /* --- Cockpit Menu ---
    container-type:size makes cqw/cqh units relative to the screen box itself,
    so the whole mini-UI scales with the viewport automatically. The blue
-   "glass" itself is a WebGL quad (screenFill in main.js) — this DOM layer
+   "glass" itself is a WebGL quad (screenFill in main.js) â€” this DOM layer
    is only the terminal UI on top of it. */
 /* Fullscreen white fade that swallows the warp mode-switch */
 #warp-flash {
@@ -96,7 +101,7 @@ canvas {
   padding: 3.5cqh 2.5cqw;
   font-family: 'Space Mono', monospace;
   color: #bfe0ff;
-  /* inner glass frame — the "bezel inside the screen" look */
+  /* inner glass frame â€” the "bezel inside the screen" look */
   box-shadow: inset 0 0 0 1px rgba(140, 200, 255, 0.22),
     inset 0 0 4cqw rgba(0, 30, 120, 0.4);
   transition: opacity 0.3s;
@@ -206,7 +211,7 @@ body.warping .cockpit-menu {
   }
 }
 
-/* Horizontal nav — three equal console panels filling the row */
+/* Horizontal nav â€” three equal console panels filling the row */
 .menu-row {
   display: flex;
   align-items: stretch;
@@ -302,40 +307,31 @@ body.warping .cockpit-menu {
   font-family: 'Space Mono', monospace;
   color: #ffd9a0;
   pointer-events: none;
-  transition: opacity 0.3s;
-  /* Tilted back about the trapezoid's bottom edge — matches
+  /* visibility flips instantly on show; the hidden state below delays it
+     so the opacity fade can play when the cockpit leaves */
+  transition: opacity 0.3s, visibility 0s;
+  /* Tilted back about the trapezoid's bottom edge â€” matches
      windowmenuPlane.rotation.x so the glass + frame + text lean together
      like a hologram you're looking down at. */
   transform: perspective(160cqw) rotateX(9deg);
   transform-origin: 50% 100%;
 }
 body[data-mode="sequence"] .window-menu {
+  opacity: 0;
   visibility: hidden;
+  transition: opacity 0.3s, visibility 0s 0.3s;
 }
 body.warping .window-menu {
   opacity: 0;
 }
 
-/* Glowing trapezoid border — vector-effect keeps the stroke a constant
+/* Glowing trapezoid border â€” vector-effect keeps the stroke a constant
    2px regardless of the non-uniform viewBox scaling. */
 .wm-frame {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  /* hologram shimmer — cheap opacity flicker, never fully dark */
-  animation: wmFlicker 4s steps(1) infinite;
-}
-@keyframes wmFlicker {
-  0%, 100% { opacity: 1; }
-  7% { opacity: 0.72; }
-  8% { opacity: 1; }
-  41% { opacity: 0.85; }
-  42% { opacity: 1; }
-  43% { opacity: 0.9; }
-  44% { opacity: 1; }
-  78% { opacity: 0.8; }
-  79% { opacity: 1; }
 }
 .wm-frame-glow {
   fill: none;
@@ -352,26 +348,120 @@ body.warping .window-menu {
   filter: drop-shadow(0 0 6px rgba(255, 180, 60, 0.75));
 }
 
-/* Idle hint — visible until a module is hovered */
-.wm-idle {
+/* Idle hologram â€” hairline figures stacked inside the trapezoid and
+   glitch-cycled, visible until a module is hovered. pointer-events:auto
+   overrides the menu's none so the figures answer the cursor. Amber
+   theme vars match the hologram palette. */
+.wm-figure {
   position: absolute;
-  top: 42%;
-  left: 0;
+  left: 50%;
+  top: 50%;
+  width: 60cqw;
+  aspect-ratio: 5 / 4;
+  transform: translate(-50%, -52%) scale(1);
+  pointer-events: auto;
+  opacity: 1;
+  /* un-hover return: fade + settle scale back in smoothly */
+  transition:
+    opacity 0.45s ease-in 0.05s,
+    transform 0.45s ease-in 0.05s,
+    visibility 0s;
+  --hairline-plate: transparent;
+  --hairline-hi: #ffe3ae;
+  --hairline-edge: #ffcd69;
+  --hairline-mid: rgba(255, 190, 90, 0.55);
+  --hairline-lo: rgba(255, 180, 80, 0.22);
+  --hairline-stroke: 1.1;
+}
+/* One host per figure, stacked; only .on is shown and hit-testable */
+.wm-figure-host {
+  position: absolute;
+  inset: 0;
+  visibility: hidden;
+}
+.wm-figure-host.on {
+  visibility: visible;
+}
+/* Panel up: figure dims and sinks slightly instead of popping away */
+.window-menu[data-active] .wm-figure {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -48%) scale(0.92);
+  transition:
+    opacity 0.18s ease-out,
+    transform 0.18s ease-out,
+    visibility 0s 0.2s;
+}
+/* Perspective floor grid â€” SVG rays converge on a vanishing point above
+   the frame; rows space out geometrically toward the bottom so it reads
+   as a floor seen from below. Clipped to the trapezoid, extra fade near
+   the horizon, behind frame/figure/panels. */
+.wm-grid {
+  position: absolute;
+  inset: 0;
   width: 100%;
-  text-align: center;
-  font-size: 1.5cqw;
-  letter-spacing: 0.45em;
-  text-indent: 0.45em;
-  color: rgba(255, 200, 110, 0.6);
-  text-shadow: 0 0 12px rgba(255, 180, 60, 0.5);
-  animation: wmIdlePulse 2.4s ease-in-out infinite;
+  height: 100%;
+  pointer-events: none;
+  clip-path: polygon(3.5% 3%, 96.5% 3%, 72.5% 97%, 27.5% 97%);
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 4%,
+    rgba(0, 0, 0, 0.35) 24%,
+    rgba(0, 0, 0, 0.75) 42%,
+    #000 62%
+  );
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 4%,
+    rgba(0, 0, 0, 0.35) 24%,
+    rgba(0, 0, 0, 0.75) 42%,
+    #000 62%
+  );
 }
-.window-menu[data-active] .wm-idle {
-  display: none;
+.wm-grid line {
+  stroke: rgba(255, 190, 90, 0.32);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
-@keyframes wmIdlePulse {
-  50% {
-    opacity: 0.3;
+.wm-grid-rays line {
+  stroke: rgba(255, 190, 90, 0.22);
+}
+/* Glitch swap â€” stepped slice/shift flicker while JS flips .on mid-way */
+.wm-figure.glitching .wm-figure-host.on {
+  animation: wmGlitchSwap 0.34s steps(2, jump-none) both;
+}
+@keyframes wmGlitchSwap {
+  0% {
+    clip-path: inset(0);
+    transform: none;
+    filter: none;
+  }
+  15% {
+    clip-path: inset(8% -4% 62% 2%);
+    transform: translateX(-2.5cqw) skewX(9deg);
+  }
+  30% {
+    clip-path: inset(58% 3% 6% -4%);
+    transform: translateX(2cqw) skewX(-7deg);
+  }
+  45% {
+    clip-path: inset(22% -2% 38% 4%);
+    transform: translateX(-1.2cqw);
+    filter: hue-rotate(-14deg) saturate(2.4) brightness(1.35);
+  }
+  60% {
+    clip-path: inset(64% -4% 4% 0);
+    transform: translateX(1.6cqw) skewX(5deg);
+  }
+  75% {
+    clip-path: inset(0);
+    transform: translateX(-0.6cqw);
+  }
+  100% {
+    clip-path: inset(0);
+    transform: none;
+    filter: none;
   }
 }
 
@@ -383,7 +473,7 @@ body.warping .window-menu {
   /* spread rows across the whole band so the readout fills the
      trapezoid instead of clustering mid-panel */
   justify-content: space-between;
-  /* top/bottom padding keeps text inside the visible band — the frame's
+  /* top/bottom padding keeps text inside the visible band â€” the frame's
      top edge sits above the viewport on wide screens (cover-fit crop) */
   padding: 11cqh 5cqw 9cqh;
   text-align: left;
@@ -413,10 +503,20 @@ body.warping .window-menu {
 .wm-panel > :nth-child(7) { --t: 6 }
 .wm-panel > :nth-child(8) { --t: 7 }
 
-/* About + Contact read centered; Projects keeps its left-aligned log style */
+/* All panels read centered */
 .wm-panel[data-panel="about"],
+.wm-panel[data-panel="projects"],
 .wm-panel[data-panel="contact"] {
   text-align: center;
+}
+.wm-panel[data-panel="projects"] .wm-proj {
+  justify-content: center;
+}
+/* No header rows — drop the content band so the first line clears the
+   trapezoid's top edge instead of sticking to it */
+.wm-panel[data-panel="projects"],
+.wm-panel[data-panel="contact"] {
+  padding-top: 20cqh;
 }
 .wm-panel[data-panel="about"] .wm-head,
 .wm-panel[data-panel="contact"] .wm-head,
@@ -431,9 +531,15 @@ body.warping .window-menu {
 .wm-panel[data-panel="about"] .wm-skill-line { font-size: 1.32cqw; }
 /* centered skills block ignores the stepped inset so wide lines still fit */
 .wm-panel[data-panel="about"] .wm-skills-bottom { margin-inline: 14cqw; }
+/* Contact panel reads 1.5x — bigger than base, calmer than 2x */
+.wm-panel[data-panel="contact"] .wm-line { font-size: 2.3cqw; }
+.wm-panel[data-panel="contact"] .wm-links .wm-link { font-size: 2.25cqw; }
 .window-menu[data-active] .wm-panel.active {
   display: flex;
   animation: wmBoot 0.32s steps(3) both;
+  /* hit-testable so the panel keeps the menu hovered — the links inside
+     would be unreachable if the cursor couldn't travel into the trap */
+  pointer-events: auto;
 }
 /* Holo scanline field inside the panel */
 .wm-panel::before {
@@ -482,7 +588,7 @@ body.warping .window-menu {
   }
 }
 
-/* Header bar — bracketed ID left, status right, thin rule beneath */
+/* Header bar â€” bracketed ID left, status right, thin rule beneath */
 .wm-head {
   display: flex;
   justify-content: space-between;
@@ -551,7 +657,7 @@ div.wm-key {
   white-space: nowrap;
 }
 
-/* Footer strip — last row of the spread, sits at the narrow bottom */
+/* Footer strip â€” last row of the spread, sits at the narrow bottom */
 .wm-foot {
   display: flex;
   align-items: center;
@@ -565,7 +671,7 @@ div.wm-key {
   color: rgba(255, 210, 140, 0.55);
 }
 
-/* Project rows — single line: amber name + dim warm desc */
+/* Project rows â€” single line: amber name + dim warm desc */
 .wm-proj {
   display: flex;
   align-items: baseline;
@@ -596,7 +702,9 @@ div.wm-key {
   margin-top: 0.4cqh;
 }
 .wm-link {
-  pointer-events: auto;
+  /* Hologram text only — the real, clickable contact links live on the
+     reveal card at the end of the sequence (16560+). */
+  pointer-events: none;
   display: inline-flex;
   align-items: center;
   gap: 0.7em;
@@ -622,28 +730,196 @@ div.wm-key {
   letter-spacing: inherit;
 }
 
-/* Return chip — only shown during the sequence */
-.cockpit-back {
+/* --- FO4 compass + return chip — top-center stack, sequence only --- */
+#fo4-hud {
   position: fixed;
-  left: 22px;
-  bottom: 18px;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 40;
   display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+body[data-mode="sequence"] #fo4-hud {
+  display: flex;
+}
+#fo4-compass {
+  position: relative;
+  width: min(480px, 70vw);
+  height: 30px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 18%,
+    #000 82%,
+    transparent
+  );
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 18%,
+    #000 82%,
+    transparent
+  );
+  font-family: 'Space Mono', monospace;
+  user-select: none;
+  pointer-events: none;
+}
+.fo4-item {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: rgba(140, 220, 255, 0.9);
+  white-space: nowrap;
+}
+.fo4-item.major {
+  font-size: 15px;
+  font-weight: 700;
+  color: rgba(190, 235, 255, 1);
+  text-shadow: 0 0 8px rgba(140, 220, 255, 0.6);
+}
+.fo4-item.hidden,
+.fo4-tick.hidden {
+  display: none;
+}
+.fo4-tick {
+  position: absolute;
+  top: 4px;
+  width: 1px;
+  height: 7px;
+  background: rgba(140, 220, 255, 0.45);
+  transform: translateX(-50%);
+}
+.fo4-tick.minor {
+  top: 6px;
+  height: 5px;
+  opacity: 0.55;
+}
+.fo4-center {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 7px solid rgba(190, 235, 255, 1);
+  filter: drop-shadow(0 0 6px rgba(140, 220, 255, 0.8));
+}
+/* Return chip — HUD-styled: corner brackets, breathing border, a light
+   sheen sweeping across on hover, and an arrow that nudges toward the
+   direction it travels. Hangs right under the compass. */
+.cockpit-back {
+  position: relative;
+  display: none;
+  overflow: hidden;
   font-family: 'Space Mono', monospace;
   font-size: 13px;
-  letter-spacing: 0.2em;
-  color: rgba(140, 220, 255, 0.85);
-  background: rgba(2, 6, 14, 0.45);
-  border: 1px solid rgba(75, 242, 255, 0.25);
-  border-radius: 6px;
-  padding: 6px 12px;
+  letter-spacing: 0.22em;
+  color: rgba(170, 230, 255, 0.9);
+  background: rgba(2, 8, 16, 0.55);
+  border: 1px solid rgba(75, 242, 255, 0.35);
+  padding: 8px 16px 8px 12px;
   cursor: pointer;
+  text-shadow: 0 0 8px rgba(75, 242, 255, 0.4);
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+  animation: cb-border-breathe 2.4s ease-in-out infinite;
 }
 body[data-mode="sequence"] .cockpit-back {
   display: block;
 }
+/* Corner brackets — the HUD targeting look */
+.cockpit-back::before,
+.cockpit-back::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  transition:
+    width 0.25s ease,
+    height 0.25s ease,
+    border-color 0.25s ease;
+}
+.cockpit-back::before {
+  top: -1px;
+  left: -1px;
+  border-top: 2px solid rgba(75, 242, 255, 0.9);
+  border-left: 2px solid rgba(75, 242, 255, 0.9);
+}
+.cockpit-back::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: 2px solid rgba(75, 242, 255, 0.9);
+  border-right: 2px solid rgba(75, 242, 255, 0.9);
+}
+/* Light sheen layer — sweeps the face while hovered */
+.cockpit-back .cb-sheen {
+  position: absolute;
+  inset: -20% -80%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    rgba(140, 230, 255, 0.22) 50%,
+    transparent 60%
+  );
+  transform: translateX(-120%);
+  pointer-events: none;
+}
+.cockpit-back .cb-arrow {
+  display: inline-block;
+  margin-right: 0.7em;
+  transition: transform 0.25s cubic-bezier(0.3, 0.6, 0.3, 1.2);
+}
 .cockpit-back:hover {
-  background: rgba(75, 242, 255, 0.15);
+  color: #e8f8ff;
+  border-color: rgba(75, 242, 255, 0.85);
+  background: rgba(75, 242, 255, 0.12);
+  box-shadow:
+    0 0 18px rgba(75, 242, 255, 0.35),
+    inset 0 0 14px rgba(75, 242, 255, 0.12);
+  text-shadow: 0 0 12px rgba(140, 230, 255, 0.9);
+}
+.cockpit-back:hover::before,
+.cockpit-back:hover::after {
+  width: 100%;
+  height: 100%;
+  border-color: rgba(140, 235, 255, 0.9);
+}
+.cockpit-back:hover .cb-sheen {
+  animation: cb-sheen-sweep 1.1s cubic-bezier(0.3, 0.6, 0.25, 1) infinite;
+}
+.cockpit-back:hover .cb-arrow {
+  transform: translateX(-4px);
+}
+.cockpit-back:active {
+  transform: scale(0.96);
+}
+@keyframes cb-sheen-sweep {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+@keyframes cb-border-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 6px rgba(75, 242, 255, 0.15);
+  }
+  50% {
+    box-shadow: 0 0 14px rgba(75, 242, 255, 0.3);
+  }
 }
 
 #scroll-hud {
@@ -672,7 +948,7 @@ body[data-mode="sequence"] .cockpit-back {
   position: fixed;
   inset: 0;
   z-index: 100;
-  pointer-events: none; /* visual only — skip is listened on window */
+  pointer-events: none; /* visual only â€” skip is listened on window */
   background: #020206;
   transition: opacity 1.8s ease;
 }
@@ -877,7 +1153,7 @@ body.booting #scroll-hud {
   display: flex;
   align-items: stretch;
   gap: clamp(24px, 4vw, 56px);
-  /* Use more of the screen — the old 1600px cap left dead space at the
+  /* Use more of the screen â€” the old 1600px cap left dead space at the
      edges on wide displays and squeezed the video pair */
   width: min(1900px, 96vw);
   height: min(82vh, 880px);
@@ -954,7 +1230,7 @@ body.booting #scroll-hud {
   color: rgba(215, 232, 255, 0.82);
 }
 
-/* Right: looping videos — main centered, reel beside it */
+/* Right: looping videos â€” main centered, reel beside it */
 .project-videos {
   flex: 1;
   display: flex;
@@ -978,7 +1254,7 @@ body.booting #scroll-hud {
 
 .project-video-main {
   /* Fill whatever remains after the side video instead of a fixed 99%
-     that shoved it off screen — the pair always fits the column. */
+     that shoved it off screen â€” the pair always fits the column. */
   flex: 1 1 auto;
   min-width: 0;
   width: auto;
@@ -1008,7 +1284,7 @@ body.booting #scroll-hud {
   max-height: none;
 }
 
-/* Stage 3 shares the same text column rules as stages 1/2 —
+/* Stage 3 shares the same text column rules as stages 1/2 â€”
    no per-stage layout overrides. */
 
 /* Small screens: rein in the offset so the column can't leave the frame,
@@ -1022,7 +1298,7 @@ body.booting #scroll-hud {
     flex: 0 0 34%;
   }
 
-  /* The height-matched video pair is too wide for narrow screens —
+  /* The height-matched video pair is too wide for narrow screens â€”
      shrink the pair proportionally so it stays inside the frame. */
   .project3-videos .project-video-main,
   .project3-videos .project-video-side {
@@ -1039,9 +1315,100 @@ body.booting #scroll-hud {
 }
 
 .project-video-side {
-  /* Height-driven width — never shrink or it gets squeezed out */
+  /* Height-driven width â€” never shrink or it gets squeezed out */
   flex: 0 0 auto;
   height: 68%;
   width: auto;
+}
+
+
+/* --- Contact reveal: the particle text raster as a real 2D card --- */
+.contact-reveal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  /* Born overexposed — the card fades in already blown out, then cools
+     to normal so the particle flare carries seamlessly into flat text. */
+  filter: brightness(4.5) drop-shadow(0 0 80px rgba(255, 255, 255, 1));
+  transition:
+    opacity 0.2s linear,
+    filter 0.9s ease-out;
+}
+.contact-reveal.on {
+  /* Card is a visual overlay — clicks pass through it (cockpit button
+     stays reachable); only the contact lines themselves take hits. */
+  pointer-events: none;
+  filter: none;
+}
+.contact-reveal.on .cr-line {
+  /* Live only while the card is actually shown — the invisible overlay
+     must not eat clicks earlier in the sequence. */
+  pointer-events: auto;
+}
+/* Real DOM text — matches the raster layout (StarWarsCrawl title,
+   Space Mono contact lines) and is fully linkable/animatable. */
+.contact-reveal .cr-card {
+  position: relative;
+  text-align: center;
+  color: #fff;
+}
+.contact-reveal .cr-title {
+  font-family: 'StarWarsCrawl', 'Space Grotesk', sans-serif;
+  font-size: clamp(44px, 8.5vw, 104px);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}
+.contact-reveal .cr-name {
+  font-family: 'StarWarsCrawl', 'Space Grotesk', sans-serif;
+  font-size: clamp(22px, 4.2vw, 52px);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  margin-top: 0.4em;
+}
+.contact-reveal .cr-lines {
+  margin-top: 3.2em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9em;
+}
+.contact-reveal .cr-line {
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: clamp(14px, 1.8vw, 22px);
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-decoration: none;
+  display: inline-block;
+  transition:
+    color 0.2s ease,
+    text-shadow 0.3s ease,
+    letter-spacing 0.3s ease;
+}
+.contact-reveal .cr-line:hover {
+  color: #ffe9c4;
+  text-shadow:
+    0 0 6px rgba(255, 220, 160, 0.9),
+    0 0 18px rgba(255, 170, 70, 0.95),
+    0 0 42px rgba(255, 120, 30, 0.65);
+  letter-spacing: 0.1em;
+}
+/* Whole card breathes a pulsing halo while any line is hovered */
+.contact-reveal .cr-card:has(.cr-line:hover) {
+  animation: cr-card-pulse 1.1s ease-in-out infinite;
+}
+@keyframes cr-card-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 10px rgba(255, 170, 70, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 24px rgba(255, 140, 40, 0.6));
+  }
 }
 

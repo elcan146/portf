@@ -3,8 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>3D Cosmic Starfield</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='10' fill='%234bf2ff'/><path d='M50 5 L53 45 L95 50 L53 55 L50 95 L47 55 L5 50 L47 45 Z' fill='%23ffffff'/></svg>" />
+    <title>Elcan Ismayilov \\ Portofilo</title>
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <link rel="stylesheet" href="./style.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -40,7 +44,7 @@
           <span class="btn-label">PROJECTS</span>
           <span class="btn-sub">SHOWCASE REEL</span>
         </button>
-        <button class="menu-btn" data-panel="contact" type="button">
+        <button class="menu-btn" data-goto="contact" data-panel="contact" type="button">
           <span class="btn-idx">[ 03 ]</span>
           <span class="btn-label">CONTACT</span>
           <span class="btn-sub">COMM LINK</span>
@@ -63,7 +67,18 @@
         <polygon class="wm-frame-glow" points="1.2,1.5 98.8,1.5 72.6,98.5 27.4,98.5" />
         <polygon class="wm-frame-line" points="1.2,1.5 98.8,1.5 72.6,98.5 27.4,98.5" />
       </svg>
-      <div class="wm-idle">&#9656; SELECT A MODULE TO DECRYPT &#9666;</div>
+      <!-- Perspective floor grid — rays converge on a vanishing point just
+           above the frame; rows are spaced geometrically so they read as
+           a floor receding away from the viewer (strong at the bottom). -->
+      <svg class="wm-grid" viewBox="0 0 800 500" preserveAspectRatio="none" aria-hidden="true">
+        <!-- populated by main.js — rays converge on a vanishing point,
+             rows space out geometrically toward the bottom -->
+        <g class="wm-grid-rays"></g>
+        <g class="wm-grid-rows"></g>
+      </svg>
+      <!-- Idle hologram: hairline figures cycled with a glitch swap
+           (mounted by main.js — vanilla API, no React needed) -->
+      <div class="wm-figure" id="wm-figure"></div>
 
       <section class="wm-panel" data-panel="about">
         <div class="wm-head wm-head-lower">
@@ -84,24 +99,17 @@
       </section>
 
       <section class="wm-panel" data-panel="projects">
-        <div class="wm-head">
-          <span data-scramble>[ MISSION_LOG // DEPLOYED ]</span>
-        </div>
         <div class="wm-proj">
           <span class="wm-name" data-scramble>&gt; CEKIGREP</span>
-          <span class="wm-desc" data-scramble>National RF monitoring grid &middot; 7 SDRs &middot; 2.5M rec/day &middot; local AI</span>
+          <span class="wm-desc" data-scramble>National RF monitoring grid &middot; 7 SDRs &middot; 2.5M rec/day &middot; local AI &middot; RBAC &middot; WA support</span>
         </div>
         <div class="wm-proj">
           <span class="wm-name" data-scramble>&gt; CEKICLIP</span>
-          <span class="wm-desc" data-scramble>Automated AI video synthesis, transcription &amp; rendering pipeline</span>
+          <span class="wm-desc" data-scramble>Automated AI video synthesis, transcription &amp; rendering pipeline &middot; GCP</span>
         </div>
         <div class="wm-proj">
           <span class="wm-name" data-scramble>&gt; GRAIL OF WAR</span>
           <span class="wm-desc" data-scramble>Cross-platform CCG &middot; custom TS engine &middot; React Native &middot; Phaser</span>
-        </div>
-        <div class="wm-proj">
-          <span class="wm-name" data-scramble>&gt; SEWFORMER [WIP]</span>
-          <span class="wm-desc" data-scramble>Blender plugin development</span>
         </div>
         <div class="wm-proj">
           <span class="wm-name" data-scramble>&gt; AZTRONICS</span>
@@ -111,15 +119,16 @@
           <span class="wm-name" data-scramble>&gt; RADIOGREP</span>
           <span class="wm-desc" data-scramble>SDR anomaly detection &middot; Random Forest / SMOTE</span>
         </div>
+        <div class="wm-proj">
+          <span class="wm-name" data-scramble>&gt; SEWFORMER [WIP]</span>
+          <span class="wm-desc" data-scramble>Blender plugin development</span>
+        </div>
         <div class="wm-foot wm-foot-text">
           <span data-scramble>&#9656; SELECT MODULE FOR FULL SHOWCASE</span>
         </div>
       </section>
 
       <section class="wm-panel" data-panel="contact">
-        <div class="wm-head">
-          <span data-scramble>[ COMM_LINK // UPLINK ]</span>
-        </div>
         <div class="wm-line"><span data-scramble>&gt; BASE_LOC: Azerbaijan, Baku</span></div>
         <div class="wm-line">
           <a class="wm-link" href="mailto:elcanismayilov@proton.me"><span data-scramble>&gt; FREQ_MAIL: elcanismayilov@proton.me</span></a>
@@ -127,11 +136,11 @@
         <div class="wm-line">
           <a class="wm-link" href="tel:+994503051802"><span data-scramble>&gt; TEL_DIRECT: +994 (50) 305-18-02</span></a>
         </div>
-        <div class="wm-key" data-scramble>[ CHANNELS ]</div>
         <div class="wm-links">
           <a class="wm-link" href="https://www.linkedin.com/in/elcan146" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
             <span data-scramble>/in/elcan146</span>
+          </a>
           <a class="wm-link" href="https://github.com/elcan146" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
             <span data-scramble>/elcan146</span>
@@ -140,8 +149,15 @@
       </section>
     </div>
 
-    <!-- Return chip — only visible while the scroll sequence plays -->
-    <button class="cockpit-back" id="cockpit-back" type="button">&larr; COCKPIT</button>
+    <!-- FO4-style compass + return chip — only visible in the sequence.
+         Compass items are generated + positioned by main.js each frame
+         from the camera's heading. -->
+    <div id="fo4-hud">
+      <div id="fo4-compass" aria-hidden="true">
+        <div class="fo4-center"></div>
+      </div>
+      <button class="cockpit-back" id="cockpit-back" type="button"><span class="cb-sheen"></span><span class="cb-arrow">&larr;</span>COCKPIT</button>
+    </div>
 
     <!-- Boot intro: typewriter in the dark, then eyelids flutter open -->
     <div id="boot-intro" aria-hidden="true">
@@ -300,6 +316,46 @@
             <video class="project-video project-video-main" src="/videos/grailsofwar_pc.mp4" muted loop playsinline></video>
             <video class="project-video project-video-side" src="/videos/grailsofwar_mobile.mp4" muted loop playsinline></video>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Final 2D contact card — fades in as the debris dissolves -->
+    <div class="contact-reveal" id="contact-reveal" aria-hidden="true">
+      <div class="cr-card">
+        <h2 class="cr-title">CONTACT</h2>
+        <h3 class="cr-name">ELCAN ISMAYILOV</h3>
+        <div class="cr-lines">
+          <a class="cr-line" href="tel:+994503051802"
+            ><span class="cr-label">PHONE:</span>
+            <span class="cr-value" data-cr-scramble>+994 50 305 18 02</span></a
+          >
+          <a class="cr-line" href="mailto:elcanismayilov@proton.me"
+            ><span class="cr-label">MAIL:</span>
+            <span class="cr-value" data-cr-scramble
+              >elcanismayilov@proton.me</span
+            ></a
+          >
+          <a
+            class="cr-line"
+            href="https://www.linkedin.com/in/elcan146"
+            target="_blank"
+            rel="noopener"
+            ><span class="cr-label">LINKEDIN:</span>
+            <span class="cr-value" data-cr-scramble
+              >linkedin.com/elcan146</span
+            ></a
+          >
+          <a
+            class="cr-line"
+            href="https://github.com/elcan146"
+            target="_blank"
+            rel="noopener"
+            ><span class="cr-label">GITHUB:</span>
+            <span class="cr-value" data-cr-scramble
+              >github.com/elcan146</span
+            ></a
+          >
         </div>
       </div>
     </div>

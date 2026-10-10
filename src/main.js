@@ -1,5 +1,15 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import {
+  cabinet,
+  dish,
+  padlock,
+  query,
+  router,
+  settle,
+  turntable,
+  vault,
+} from "@lucasmarkes/hairline";
 
 // --- Configuration ---
 const CONFIG = {
@@ -9,6 +19,8 @@ const CONFIG = {
   spaceWidth: 2800,
   spaceHeight: 2000,
   scrollSensitivity: 1.1,
+  scrollMomentumDecay: 0.9,   // inertia bleed-off per frame — governs the float length
+  scrollMomentumMax: 400,     // cap on stored momentum
   lerpFactor: 0.075,
   driftSpeed: 0.0,      // Only moves when scrolled
   pushForce: 2.2,       // Gentle touch impulse (moves just a little, no yeeting)
@@ -25,6 +37,36 @@ const crawlStage4 = document.getElementById("crawl-stage-4");
 const crawlShade = document.getElementById("crawl-shade");
 const scrollHud = document.getElementById("scroll-hud");
 const spaceHud = document.getElementById("space-hud");
+
+// FO4-style compass — cardinal letters every 45° (majors at N/E/S/W)
+// plus hairline ticks every 15°. main.js positions them each frame by
+// the camera's world heading, like the pip-boy compass band.
+const fo4Compass = document.getElementById("fo4-compass");
+const fo4Items = [];
+if (fo4Compass) {
+  const CARDINALS = {
+    0: "N",
+    45: "NE",
+    90: "E",
+    135: "SE",
+    180: "S",
+    225: "SW",
+    270: "W",
+    315: "NW",
+  };
+  for (let d = 0; d < 360; d += 15) {
+    const el = document.createElement("div");
+    if (CARDINALS[d]) {
+      el.className = "fo4-item" + (d % 90 === 0 ? " major" : "");
+      el.textContent = CARDINALS[d];
+    } else {
+      el.className = "fo4-tick" + (d % 45 ? " minor" : "");
+    }
+    fo4Compass.appendChild(el);
+    fo4Items.push({ el, deg: d });
+  }
+}
+const fo4Dir = new THREE.Vector3();
 const projectStage = document.getElementById("project-stage");
 const projectTextInner = document.getElementById("project-text-inner");
 const project2Stage = document.getElementById("project2-stage");
@@ -36,6 +78,8 @@ const cockpitMenu = document.querySelector(".cockpit-menu");
 const project3Stage = document.getElementById("project3-stage");
 const project3TextInner = document.getElementById("project3-text-inner");
 const project3Videos = project3Stage ? [...project3Stage.querySelectorAll("video")] : [];
+const contactReveal = document.getElementById("contact-reveal");
+const contactRevealImg = document.getElementById("contact-reveal-img");
 
 // Loop positions where space movement freezes and each showcase takes over.
 // Stage 2 parks at 11100 — the start of its peak plateau, right where the
@@ -907,6 +951,295 @@ if (MODELS_ENABLED) MODEL_FILENAMES.forEach((filename) => {
   );
 });
 
+// ==========================================
+// --- Particle Earth ---
+// Fixed cosmic anchor dead ahead on the tunnel axis. It rides the same
+// toroidal wrap as the floating props, so it drifts into view exactly when
+// the last camera pan (space 16000→16600) swings back to the original facing.
+// ==========================================
+const EARTH_SCROLL_ANCHOR = 16000; // scroll position the reveal is keyed to
+const EARTH_LEAD = 2200;           // units ahead of the camera at the anchor
+const EARTH_DIAMETER = 1000;       // hero-sized globe (~500 world-unit radius)
+const EARTH_POINT_SIZE = 2.2;      // world-unit point size (attenuated)
+const EARTH_TEXT_POINT_SIZE = 5.2; // larger dots once the text forms solid
+const EARTH_POINT_BUDGET = 550000; // max verts after downsampling (src has ~2.06M)
+const EARTH_TEXT_HEIGHT = 1400;    // world height of the formed text block
+// Forward travel parks at EARTH_FREEZE; the explode → text timeline then
+// plays in loop units while spaceScroll is held there.
+const EARTH_FREEZE = 16560;      // the park: globe ~1240 ahead, explodes here
+const EARTH_EXPLODE_START = 16600;
+const EARTH_EXPLODE_END = 16900;
+const EARTH_MORPH_START = 16900;
+const EARTH_MORPH_END = 17300;   // fully solid text at 17300
+const EARTH_SCROLL_END = 17360;  // scroll dead-ends here — sequence over
+// The tunnel wrap puts an object at relZ = wrap(cosmicZ + scroll), so the
+// camera reaches cosmic z C at scroll 36000 - C. While parked at 16560 the
+// text plane sits ~1800 units ahead (arrive = 18360 if the freeze releases).
+const EARTH_TEXT_ARRIVE = 18360;
+const earthCosmicZ = EARTH_SCROLL_ANCHOR + EARTH_LEAD;
+const textCosmicZ = (CONFIG.spaceDepth - EARTH_TEXT_ARRIVE) % CONFIG.spaceDepth;
+let earthGroup = null;
+let earthSpin = 0;
+window.__earthMat = () => earthPointMaterial.uniforms; // debug handle
+window.__earthGeo = () => (earthGroup && earthGroup.children[0]) ? earthGroup.children[0].geometry : null;
+
+// Morph shader: each particle lives in COSMIC space (z anchored to the
+// tunnel like the starfield). Three stages share one draw call:
+//   1. sphere — raw positions, slowly spinning (uSpin)
+//   2. explosion — sphere + aBurst * uExplode
+//   3. text — lerp toward aTarget glyph positions on a plane ahead (uMorph)
+const earthPointMaterial = new THREE.ShaderMaterial({
+  vertexColors: true,
+  transparent: true,
+  depthWrite: false,
+  uniforms: {
+    uScroll: uniforms.uScroll,   // shared with the starfield
+    uDepth: uniforms.uDepth,
+    uCenterZ: { value: earthCosmicZ },
+    uExplode: { value: 0 },
+    uMorph: { value: 0 },
+    uSpin: { value: 0 },
+    uSize: { value: EARTH_POINT_SIZE },
+    uScale: { value: 800 },
+    uGlow: { value: 0 },           // 1 during the explosion flash
+    uDissolve: { value: 0 },       // 1 once the 2D DOM text takes over
+  },
+  vertexShader: `
+    attribute vec3 aBurst;
+    attribute vec3 aTarget;
+    attribute float aDelay;
+    attribute float aKeep;
+    uniform float uScroll, uDepth, uCenterZ, uExplode, uMorph, uSpin, uSize, uScale, uGlow, uDissolve;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      // Flare tints toward cold arc-light blue-white — artificial light
+      vColor = color * (1.0 + uGlow * vec3(1.6, 1.9, 2.3)); // explosion flash brightens
+      float c = cos(uSpin), s = sin(uSpin);
+      vec3 exploded = position + aBurst * uExplode;
+      exploded = vec3(
+        exploded.x * c - exploded.z * s,
+        exploded.y,
+        exploded.x * s + exploded.z * c
+      );
+      // Staggered morph: each particle starts its flight at its own delay
+      // so the debris cloud streams into letters instead of lerping en bloc
+      float mt = clamp(uMorph * 1.25 - aDelay * 0.25, 0.0, 1.0);
+      mt = mt * mt * (3.0 - 2.0 * mt);
+      vec3 p = mix(exploded, aTarget, mt);
+      float z = mod(p.z + uCenterZ + uScroll + uDepth * 0.5, uDepth) - uDepth * 0.5;
+      float dist = -z;
+      vAlpha = smoothstep(0.0, 120.0, dist)
+             * (1.0 - smoothstep(uDepth * 0.375, uDepth * 0.5, dist));
+      // Staggered dissolve — each particle fades at its own delay so the
+      // cloud sparkles out instead of blinking off as one slab. Fades
+      // only down to 5% — a ghost of the debris hangs behind the card.
+      vAlpha *=
+        mix(1.0, aKeep, mt) *
+        max(0.05, clamp(1.0 - uDissolve * 1.5 + aDelay * 0.5, 0.0, 1.0));
+      vec4 mv = modelViewMatrix * vec4(p.xy, z, 1.0);
+      gl_Position = projectionMatrix * mv;
+      gl_PointSize =
+        uSize *
+        (uScale / -mv.z) *
+        (1.0 + uGlow * 0.5) *
+        (1.0 - uDissolve * 0.7); // dissolving debris shrinks to specks
+    }
+  `,
+  fragmentShader: `
+    uniform float uGlow;
+    varying vec3 vColor;
+    varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord - 0.5);
+      // Glow turns each dot into a soft halo — edge fades to a wide
+      // gradient so overlapping points bloom like a light source.
+      float edge = max(0.02, 0.32 - uGlow * 0.045);
+      float a = smoothstep(0.5, edge, d) * vAlpha;
+      a = min(1.0, a * (1.0 + uGlow * 0.35));
+      if (a < 0.004) discard;
+      gl_FragColor = vec4(vColor, a);
+    }
+  `,
+});
+
+// Rasterize the contact block on an offscreen canvas and harvest the lit
+// pixels as particle targets. Returns flat [x,y,...] pixel coords.
+function buildEarthTextTargets() {
+  const W = 2048, H = 1024;
+  const cv = document.createElement("canvas");
+  cv.width = W;
+  cv.height = H;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  ctx.fillStyle = "#fff";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+
+  const HEAD = "'StarWarsCrawl', 'Space Mono', monospace";
+  const BODY = "'Space Mono', monospace";
+  const lines = [
+    { text: "CONTACT", font: `170px ${HEAD}`, y: 105 },
+    { text: "ELCAN ISMAYILOV", font: `100px ${HEAD}`, y: 290 },
+    { text: "PHONE: +994 50 305 18 02", font: `bold 54px ${BODY}`, y: 510 },
+    { text: "MAIL: elcanismayilov@proton.me", font: `bold 54px ${BODY}`, y: 600 },
+    { text: "LINKEDIN: linkedin.com/elcan146", font: `bold 54px ${BODY}`, y: 690 },
+    { text: "GITHUB: github.com/elcan146", font: `bold 54px ${BODY}`, y: 780 },
+  ];
+  for (const l of lines) {
+    ctx.font = l.font;
+    ctx.fillText(l.text, W / 2, l.y);
+  }
+
+  const img = ctx.getImageData(0, 0, W, H).data;
+  const pts = [];
+  for (let y = 0; y < H; y += 2) {
+    for (let x = 0; x < W; x += 2) {
+      if (img[(y * W + x) * 4 + 3] > 128) pts.push(x, y);
+    }
+  }
+  return { pts, w: W, h: H, url: cv.toDataURL("image/png") };
+}
+
+gltfLoader.load(
+  "/3d/earth/scene.gltf",
+  (gltf) => {
+    const root = gltf.scene;
+
+    // Recentre the point cloud and normalize it to the hero diameter
+    const box = new THREE.Box3().setFromObject(root);
+    const size = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+
+    // PERF: the asset ships 150 point primitives (~2.06M verts) — 150 draw
+    // calls of transparent points was tanking the frame rate. Merge them
+    // into ONE geometry, stride-sampled down to EARTH_POINT_BUDGET verts,
+    // so the whole globe is a single draw call.
+    let totalVerts = 0;
+    const parts = [];
+    root.traverse((child) => {
+      if (child.isPoints) {
+        child.updateWorldMatrix(true, false);
+        parts.push(child);
+        totalVerts += child.geometry.attributes.position.count;
+      }
+    });
+
+    const modelScale = EARTH_DIAMETER / (maxDim || 1);
+    const stride = Math.max(1, Math.ceil(totalVerts / EARTH_POINT_BUDGET));
+    const kept = Math.ceil(totalVerts / stride);
+    const positions = new Float32Array(kept * 3);
+    const bursts = new Float32Array(kept * 3);
+    const targets = new Float32Array(kept * 3);
+    const colors = new Float32Array(kept * 3);
+    const delays = new Float32Array(kept);
+    const keeps = new Float32Array(kept);
+    const v = new THREE.Vector3();
+    const dir = new THREE.Vector3();
+    let w = 0;
+    // The gltf ships animation frame nodes — most collapse to near-zero
+    // scale and their verts pile into a dense interior blob that bursts as
+    // one coherent slab. Skip degenerate parts and interior junk, keep only
+    // real surface verts (shell ~r500 world).
+    const MIN_RADIUS2 = 220 * 220;
+    for (const child of parts) {
+      const pos = child.geometry.attributes.position;
+      const col = child.geometry.attributes.color;
+      const m = child.matrixWorld;
+      if (m.getMaxScaleOnAxis() < 0.01) continue;
+      for (let i = 0; i < pos.count; i += stride) {
+        v.fromBufferAttribute(pos, i).applyMatrix4(m).sub(center);
+        const wx = v.x * modelScale;
+        const wy = v.y * modelScale;
+        const wz = v.z * modelScale;
+        if (wx * wx + wy * wy + wz * wz < MIN_RADIUS2) continue;
+        positions[w * 3] = wx;
+        positions[w * 3 + 1] = wy;
+        positions[w * 3 + 2] = wz;
+        if (col) {
+          // Desaturate: keep each point's luminance, drop the hue so no
+          // colorful specks remain — the globe renders monochrome.
+          const r = col.getX(i), g = col.getY(i), b = col.getZ(i);
+          const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+          colors[w * 3] = colors[w * 3 + 1] = colors[w * 3 + 2] = lum;
+        } else {
+          colors[w * 3] = colors[w * 3 + 1] = colors[w * 3 + 2] = 1;
+        }
+        w++;
+      }
+      child.geometry.dispose();
+    }
+
+    // The real shell is far thinner than the budget — tile it with tiny
+    // jittered duplicates so the globe and the text stay dense.
+    const realCount = w;
+    if (realCount > 0) {
+      while (w < kept) {
+        const si = (Math.random() * realCount) | 0;
+        // Tiny jitter keeps the shell tight — big offsets make it fuzzy
+        positions[w * 3] = positions[si * 3] + (Math.random() - 0.5) * 1.5;
+        positions[w * 3 + 1] = positions[si * 3 + 1] + (Math.random() - 0.5) * 1.5;
+        positions[w * 3 + 2] = positions[si * 3 + 2] + (Math.random() - 0.5) * 1.5;
+        colors[w * 3] = colors[si * 3];
+        colors[w * 3 + 1] = colors[si * 3 + 1];
+        colors[w * 3 + 2] = colors[si * 3 + 2];
+        w++;
+      }
+    }
+
+    // Radial shatter: direction straight out from the globe core, small
+    // enough that the debris stays onscreen — continuity into the text
+    // comes from the staggered morph, not from flinging one direction.
+    for (let i = 0; i < w; i++) {
+      dir.set(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
+      if (dir.lengthSq() < 1) dir.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5);
+      dir.normalize().multiplyScalar(180 + Math.random() * 620);
+      bursts[i * 3] = dir.x + (Math.random() - 0.5) * 160;
+      bursts[i * 3 + 1] = dir.y + (Math.random() - 0.5) * 160;
+      bursts[i * 3 + 2] = dir.z + (Math.random() - 0.5) * 160 - Math.random() * 200;
+      delays[i] = Math.random();
+      keeps[i] = Math.random() < 0.3 ? 1 : 0; // ~30% survive into the text
+    }
+
+    // Glyph targets need the webfonts rasterized — wait for them so the
+    // canvas doesn't fall back to a system font.
+    document.fonts.ready.then(() => {
+      const tgt = buildEarthTextTargets();
+      // Hand the exact raster to the DOM card — the particle text
+      // literally becomes this image at the end of the morph.
+      if (contactRevealImg)
+        contactRevealImg.style.backgroundImage = `url(${tgt.url})`;
+      const nT = tgt.pts.length / 2;
+      const ts = EARTH_TEXT_HEIGHT / tgt.h; // canvas px → world units
+      const cx = tgt.w * 0.5, cy = tgt.h * 0.5;
+      const textLocalZ = textCosmicZ - earthCosmicZ;
+      for (let i = 0; i < w; i++) {
+        const ti = (Math.random() * nT) | 0;
+        targets[i * 3] = (tgt.pts[ti * 2] - cx) * ts + (Math.random() - 0.5) * 4;
+        targets[i * 3 + 1] = (cy - tgt.pts[ti * 2 + 1]) * ts + (Math.random() - 0.5) * 4;
+        targets[i * 3 + 2] = textLocalZ + (Math.random() - 0.5) * 60;
+      }
+
+      const earthGeo = new THREE.BufferGeometry();
+      earthGeo.setAttribute("position", new THREE.BufferAttribute(positions.subarray(0, w * 3), 3));
+      earthGeo.setAttribute("color", new THREE.BufferAttribute(colors.subarray(0, w * 3), 3));
+      earthGeo.setAttribute("aBurst", new THREE.BufferAttribute(bursts.subarray(0, w * 3), 3));
+      earthGeo.setAttribute("aTarget", new THREE.BufferAttribute(targets.subarray(0, w * 3), 3));
+      earthGeo.setAttribute("aDelay", new THREE.BufferAttribute(delays.subarray(0, w), 1));
+      earthGeo.setAttribute("aKeep", new THREE.BufferAttribute(keeps.subarray(0, w), 1));
+      earthGeo.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 16000);
+
+      earthGroup = new THREE.Group();
+      earthGroup.add(new THREE.Points(earthGeo, earthPointMaterial));
+      scene.add(earthGroup);
+    });
+  },
+  undefined,
+  (err) => {
+    console.warn("Could not load earth model", err);
+  }
+);
+
 // --- Raycasting, 3D Drag & Throw Physics ---
 const raycaster = new THREE.Raycaster();
 const mouseCoords = new THREE.Vector2(-999, -999);
@@ -1081,6 +1414,7 @@ let targetScroll = 0.0;
 let currentScroll = 0.0;
 let spaceScroll = 0.0; // Freezes at PROJECT_SCROLL_START each loop pass
 let velocity = 0.0;
+let scrollVelocity = 0.0; // wheel momentum — decays every frame into a float
 
 // Project showcase skip state: a burst of fast scrolling dismisses the
 // showcase and hands control back to the space scroll.
@@ -1131,6 +1465,7 @@ function setSpaceMode(mode, startScroll = 0) {
       targetScroll = startScroll;
       currentScroll = startScroll;
       spaceScroll = startScroll;
+      scrollVelocity = 0;
       freezeOffset = 0;
       lastLoopIdx = Math.floor(currentScroll / CONFIG.spaceDepth);
       projectSkipped = false;
@@ -1187,6 +1522,7 @@ function setSpaceMode(mode, startScroll = 0) {
     targetScroll = startScroll;
     currentScroll = startScroll;
     spaceScroll = startScroll;
+    scrollVelocity = 0;
     freezeOffset = 0;
     lastLoopIdx = Math.floor(currentScroll / CONFIG.spaceDepth);
     stage1TextShift = 0; stage1Dwell = 0;
@@ -1207,6 +1543,7 @@ window.getSpaceMode = () => appMode;
 window.gotoScene = (sceneName) => {
   if (sceneName === "crawl") setSpaceMode("sequence", 0);
   else if (sceneName === "projects") setSpaceMode("sequence", 6600);
+  else if (sceneName === "contact") setSpaceMode("sequence", 16510);
 };
 
 // Warp launch: spool FOV + travel speed, fade the cockpit, land in sequence
@@ -1216,8 +1553,9 @@ function startWarp(sceneName) {
     phase: "in",
     t: 0,
     // 6600 = peak of the "Projects" title crawl (full-opacity plateau
-    // 6120-7080 inside the 5900-7400 stage-4 window)
-    land: sceneName === "projects" ? 6600 : 0,
+    // 6120-7080 inside the 5900-7400 stage-4 window); contact lands just
+    // before the 16560 freeze so a nudge of scroll fires the explosion.
+    land: sceneName === "contact" ? 16510 : sceneName === "projects" ? 6600 : 0,
   };
   cockpitAlphaTarget = 0;
   document.body.classList.add("warping");
@@ -1292,17 +1630,75 @@ function showWindowPanel(name) {
     .forEach((el, i) => wmScrambleEl(el, 70 + i * 95));
 }
 
+// Contact card — hovering a line decodes its value with the same 21st
+// scramble effect the window menu uses (21st.dev dqnamo/scramble-text).
+document.querySelectorAll(".cr-line").forEach((a) => {
+  const target = a.querySelector("[data-cr-scramble]");
+  if (!target) return;
+  a.addEventListener("mouseenter", () => wmScrambleEl(target, 0));
+  a.addEventListener("mouseleave", () => {
+    wmRunId++; // kill the in-flight decode so it stops mid-way cleanly
+    if (target.dataset.text) target.textContent = target.dataset.text;
+  });
+});
+
 function hideWindowPanel() {
   if (!windowMenuEl || !windowMenuEl.dataset.active) return;
   wmRunId++;
   delete windowMenuEl.dataset.active;
 }
 
+// Panel hide is deferred — the cursor needs a beat to travel from the
+// console button into the trapezoid. Hovering anything inside the menu
+// cancels the hide; leaving the menu hides it. Without this the contact
+// links vanished before they could be reached.
+let wmHideTimer = 0;
+function wmScheduleHide(e) {
+  const to = e && e.relatedTarget;
+  // Heading straight into the menu or another console button? Keep open.
+  if (to) {
+    if (windowMenuEl && windowMenuEl.contains(to)) return;
+    if (to.closest && to.closest(".menu-btn[data-panel]")) return;
+  }
+  clearTimeout(wmHideTimer);
+  wmHideTimer = setTimeout(hideWindowPanel, 450);
+}
+if (windowMenuEl) {
+  windowMenuEl.addEventListener("mouseover", () =>
+    clearTimeout(wmHideTimer)
+  );
+  // The active panel is hit-testable (pointer-events:auto), so a real
+  // mouseleave fires once the cursor fully exits the trapezoid — same
+  // grace window applies, letting the pointer jump back to a button.
+  windowMenuEl.addEventListener("mouseleave", wmScheduleHide);
+}
+
+// Transit corridor — the dead space between the console buttons and the
+// trapezoid has no hover target of its own, so timing alone is fragile.
+// Each mousemove re-decides: pointer over the menu or a button cancels
+// the pending hide; pointer over anything else (canvas) schedules it.
+document.addEventListener("mousemove", (e) => {
+  if (!windowMenuEl || !windowMenuEl.dataset.active) return;
+  const t = e.target;
+  if (
+    windowMenuEl.contains(t) ||
+    (t.closest && t.closest(".menu-btn[data-panel]"))
+  ) {
+    clearTimeout(wmHideTimer);
+    return;
+  }
+  clearTimeout(wmHideTimer);
+  wmHideTimer = setTimeout(hideWindowPanel, 300);
+});
+
 document.querySelectorAll(".menu-btn[data-panel]").forEach((btn) => {
   const name = btn.dataset.panel;
-  btn.addEventListener("mouseenter", () => showWindowPanel(name));
+  btn.addEventListener("mouseenter", () => {
+    clearTimeout(wmHideTimer);
+    showWindowPanel(name);
+  });
   btn.addEventListener("focus", () => showWindowPanel(name));
-  btn.addEventListener("mouseleave", hideWindowPanel);
+  btn.addEventListener("mouseleave", wmScheduleHide);
   btn.addEventListener("blur", hideWindowPanel);
   // Touch has no hover — tapping a non-navigating button (CONTACT)
   // toggles its panel instead.
@@ -1312,6 +1708,66 @@ document.querySelectorAll(".menu-btn[data-panel]").forEach((btn) => {
     else showWindowPanel(name);
   });
 });
+
+// Perspective floor grid inside the trapezoid: rays converge on a
+// vanishing point just above the frame (400,-140); depth rows are
+// spaced geometrically (x0.95) so cells shrink toward the horizon.
+// Generated here so density is a number, not a wall of markup.
+const wmGridEl = document.querySelector(".wm-grid");
+if (wmGridEl) {
+  const SVGNS = "http://www.w3.org/2000/svg";
+  const rays = wmGridEl.querySelector(".wm-grid-rays");
+  const mkLine = (x1, y1, x2, y2) => {
+    const l = document.createElementNS(SVGNS, "line");
+    l.setAttribute("x1", x1);
+    l.setAttribute("y1", y1);
+    l.setAttribute("x2", x2);
+    l.setAttribute("y2", y2);
+    return l;
+  };
+  // ~145 rays fanned across the bottom edge
+  for (let i = 0; i <= 144; i++) {
+    rays.appendChild(mkLine(400, -140, -1456 + i * 25.8, 520));
+  }
+  // ~68 rows, geometrically shrinking toward the horizon; opacity is a
+  // continuous function of depth so the dissolve is smooth, not stepped
+  const rows = wmGridEl.querySelector(".wm-grid-rows");
+  for (let y = 500; y > 15; y = Math.round(y * 0.95)) {
+    const l = mkLine(-20, y, 820, y);
+    l.setAttribute("stroke-opacity", (Math.pow(y / 500, 1.7) * 0.6).toFixed(3));
+    rows.appendChild(l);
+  }
+}
+
+// Idle hologram: a stack of hairline figures inside the windshield
+// trapezoid, glitch-cycled every 2-4s. Every figure self-animates via
+// play (pointer interaction pauses it while hovered, then it resumes).
+// Hidden while a panel is active.
+const wmFigureEl = document.getElementById("wm-figure");
+if (wmFigureEl) {
+  const specs = [dish, router, padlock, settle, query, vault, cabinet, turntable];
+  const figures = specs.map((fn, i) => {
+    const host = document.createElement("div");
+    host.className = "wm-figure-host" + (i === 0 ? " on" : "");
+    wmFigureEl.appendChild(host);
+    return fn(host, { intensity: 0.7, play: true });
+  });
+  let wmIdx = 0;
+  const wmGlitchSwap = () => {
+    wmFigureEl.classList.add("glitching");
+    // flip .on mid-glitch so the incoming figure glitches in too
+    setTimeout(() => {
+      wmFigureEl.children[wmIdx].classList.remove("on");
+      let next = wmIdx;
+      while (next === wmIdx) next = (Math.random() * figures.length) | 0;
+      wmIdx = next;
+      wmFigureEl.children[wmIdx].classList.add("on");
+    }, 160);
+    setTimeout(() => wmFigureEl.classList.remove("glitching"), 360);
+    setTimeout(wmGlitchSwap, 2000 + Math.random() * 2000);
+  };
+  setTimeout(wmGlitchSwap, 2000 + Math.random() * 2000);
+}
 const cockpitBackBtn = document.getElementById("cockpit-back");
 if (cockpitBackBtn) {
   cockpitBackBtn.addEventListener("click", () => setSpaceMode("cockpit"));
@@ -1430,14 +1886,22 @@ window.addEventListener(
   (e) => {
     e.preventDefault();
     const delta = e.deltaY;
-    targetScroll += delta * CONFIG.scrollSensitivity;
+    // inertia model: each tick adds velocity sized so its total travel
+    // equals the old direct scroll (v0 = delta·sens·(1-decay)) — speed is
+    // identical while scrolling, then it glides out into a soft stop
+    scrollVelocity = THREE.MathUtils.clamp(
+      scrollVelocity +
+        delta * CONFIG.scrollSensitivity * (1 - CONFIG.scrollMomentumDecay),
+      -CONFIG.scrollMomentumMax,
+      CONFIG.scrollMomentumMax
+    );
 
     // A hard flick of fast scrolling while the showcase is up skips it
     const now = performance.now();
     if (now - lastWheelTime > 220) wheelEnergy = 0;
     lastWheelTime = now;
     wheelEnergy += Math.abs(delta);
-    if (appMode === "sequence" && !projectSkipped && wheelEnergy > 650 && loopScrollNow >= PROJECT_SCROLL_START - 100) {
+    if (appMode === "sequence" && !projectSkipped && wheelEnergy > 650 && loopScrollNow >= PROJECT_SCROLL_START - 100 && loopScrollNow < EARTH_FREEZE - 20) {
       projectSkipped = true;
     }
   },
@@ -1487,7 +1951,7 @@ window.addEventListener(
       if (now - lastWheelTime > 220) wheelEnergy = 0;
       lastWheelTime = now;
       wheelEnergy += Math.abs(deltaY) * 8;
-      if (appMode === "sequence" && !projectSkipped && wheelEnergy > 650 && loopScrollNow >= PROJECT_SCROLL_START - 100) {
+      if (appMode === "sequence" && !projectSkipped && wheelEnergy > 650 && loopScrollNow >= PROJECT_SCROLL_START - 100 && loopScrollNow < EARTH_FREEZE - 20) {
         projectSkipped = true;
       }
     }
@@ -1554,6 +2018,15 @@ function animate(currentTime) {
   // Cockpit mode: gentle idle cruise so the starfield always breathes
   if (appMode === "cockpit") targetScroll += 0.4;
 
+  // Momentum: wheel inertia drives the scroll and decays every frame —
+  // sized so each tick's total travel matches the old direct speed, so
+  // motion is one continuous ramp into a soft stop
+  if (scrollVelocity !== 0) {
+    targetScroll += scrollVelocity;
+    scrollVelocity *= CONFIG.scrollMomentumDecay;
+    if (Math.abs(scrollVelocity) < 0.02) scrollVelocity = 0;
+  }
+
   // Warp launch, staged like a hyperspace jump:
   //  1) cockpit fades away first
   //  2) FOV spools + travel speed ramps (stars glow up as velocity builds)
@@ -1619,8 +2092,18 @@ function animate(currentTime) {
     }
   }
 
+  // The sequence ends at the contact card — scrolling forward past it
+  // dead-ends instead of wrapping into the next lap. The cap rides
+  // freezeOffset so it stays correct after showcase skips.
+  const scrollLimit = freezeOffset + EARTH_SCROLL_END;
+  if (targetScroll > scrollLimit) targetScroll = scrollLimit;
+  // One-way track — scrolling back past 0 dead-ends instead of
+  // wrapping into the previous loop lap.
+  if (targetScroll < 0) targetScroll = 0;
+
   // Damped smooth lerp towards target scroll
   currentScroll += (targetScroll - currentScroll) * CONFIG.lerpFactor;
+  if (currentScroll < 0) currentScroll = 0;
 
   // Space scroll freezes at the project showcase (loop position 7900) unless
   // the user fast-scrolled to skip it; skipOffset keeps motion continuous.
@@ -1655,7 +2138,7 @@ function animate(currentTime) {
             ? PROJECT2_SCROLL_START
             : spaceScroll < base + PROJECT3_SCROLL_START + 100
               ? PROJECT3_SCROLL_START
-              : Infinity)
+              : EARTH_FREEZE) // terminal bound — forward space travel ends at 16560
       : Infinity;
   const prevSpaceScroll = spaceScroll;
   if (projectSkipped) {
@@ -1672,7 +2155,11 @@ function animate(currentTime) {
       (skipStartSpace < base + PROJECT_SCROLL_START + 500 &&
         spaceScroll >= base + PROJECT2_SCROLL_START - 20) ||
       (skipStartSpace < base + PROJECT2_SCROLL_START + 500 &&
-        spaceScroll >= base + PROJECT3_SCROLL_START - 20)
+        spaceScroll >= base + PROJECT3_SCROLL_START - 20) ||
+      // The earth park is the last stop — landing always applies, even
+      // when the skip began past PROJECT3+500 (that precondition used
+      // to leave projectSkipped stuck true and space flying on).
+      spaceScroll >= base + EARTH_FREEZE - 20
     ) {
       projectSkipped = false;
       wheelEnergy = 0;
@@ -1686,6 +2173,15 @@ function animate(currentTime) {
     // showcases engage purely on where space actually is.
     spaceScroll = Math.min(currentScroll - freezeOffset, freezeBound);
   }
+  // Hard cap — space never travels past the earth freeze and never
+  // below 0. The skipped branch above tracks raw scroll with no bound
+  // clamp, so this backstops leaks in both directions.
+  if (appMode === "sequence")
+    spaceScroll = THREE.MathUtils.clamp(
+      spaceScroll,
+      0,
+      base + EARTH_FREEZE + 10
+    );
   velocity = (spaceScroll - prevSpaceScroll) / (delta * 60);
 
   // Debug state for inspection
@@ -1788,6 +2284,55 @@ function animate(currentTime) {
     obj.group.visible = alpha > 0.01 && dist > 8;
   }
 
+  // --- Particle Earth: explode → text morph while parked at 16560 ---
+  // Driven by loopScroll (currentScroll) so it keeps playing while the
+  // EARTH_FREEZE bound holds spaceScroll at 16560. Positions live in cosmic
+  // space; the shader wraps Z per-particle against spaceScroll.
+  if (earthGroup) {
+    // Virtual space position: keeps advancing while the freeze parks
+    // spaceScroll, and stays aligned when a showcase skip offsets scroll.
+    // Clamp instead of mod-wrap — a negative value (scrolled back below
+    // the skip offset, e.g. at the opening crawl) used to wrap to the
+    // loop top and pop the contact card in.
+    const earthDrive = THREE.MathUtils.clamp(
+      currentScroll - freezeOffset,
+      0,
+      EARTH_SCROLL_END
+    );
+    const explodeT = THREE.MathUtils.smoothstep(
+      earthDrive, EARTH_EXPLODE_START, EARTH_EXPLODE_END
+    );
+    // No particle-text phase — the debris cloud just drifts outward and
+    // cools, then a blinding flare wipes it while the DOM card fades in
+    // beneath it, born overexposed and cooling via its CSS transition.
+    const driftT = THREE.MathUtils.smoothstep(earthDrive, 16900, 17150);
+    const dissolveT = THREE.MathUtils.smoothstep(earthDrive, 17140, 17320);
+    const endFlash = THREE.MathUtils.smoothstep(earthDrive, 17160, 17255) * 6.5;
+
+    if (!spaceFrozen || explodeT > 0)
+      earthSpin += delta * (explodeT > 0 ? 0.08 : 0.05);
+
+    const eu = earthPointMaterial.uniforms;
+    eu.uExplode.value = explodeT + driftT * 0.55;
+    eu.uMorph.value = 0; // the debris never becomes text
+    eu.uSpin.value = earthSpin;
+    eu.uSize.value = EARTH_POINT_SIZE;
+    eu.uGlow.value = explodeT * (1 - driftT) + endFlash;
+    eu.uDissolve.value = dissolveT;
+    if (contactReveal) {
+      // Space sequence only — the card must never bleed into the cockpit
+      const showCard = appMode === "sequence" ? dissolveT : 0;
+      contactReveal.style.opacity = showCard.toFixed(3);
+      const active = showCard > 0.5;
+      if (active !== contactReveal.classList.contains("on")) {
+        contactReveal.classList.toggle("on", active);
+        contactReveal.setAttribute("aria-hidden", active ? "false" : "true");
+      }
+    }
+    eu.uScale.value =
+      renderer.domElement.height * 0.5 * camera.projectionMatrix.elements[5];
+  }
+
   // Cockpit mode: no stages — just keep the center-fade anchor + HUD alive
   if (appMode === "cockpit") {
     camera.updateMatrixWorld();
@@ -1874,6 +2419,24 @@ function animate(currentTime) {
     }
     renderStage(crawlStage1, stage1Scroll, 0, 1300, window.innerHeight * 0.44, 0.42);
 
+    // FO4 compass: slide the band so the current camera heading sits
+    // under the center tick. ±70° span across the strip width.
+    if (fo4Items.length) {
+      camera.getWorldDirection(fo4Dir);
+      const heading =
+        ((Math.atan2(fo4Dir.x, -fo4Dir.z) * 180) / Math.PI + 360) % 360;
+      const w = fo4Compass.clientWidth || 1;
+      const pxPerDeg = w / 140;
+      for (const { el, deg } of fo4Items) {
+        const diff = ((deg - heading + 540) % 360) - 180;
+        const off = Math.abs(diff);
+        const hid = off > 68;
+        if (hid !== el.classList.contains("hidden"))
+          el.classList.toggle("hidden", hid);
+        if (!hid) el.style.left = `${w / 2 + diff * pxPerDeg}px`;
+      }
+    }
+
     // Stage 2: "I'm a Systems Architecture & Full Stack Software Engineer." (Active from 1350 to 2800)
     // ONLY appears after Stage 1 has completely disappeared!
     renderStage(crawlStage2, loopScroll, 1350, 2800, window.innerHeight * 0.48, 0.42);
@@ -1894,7 +2457,8 @@ function animate(currentTime) {
       const wrapFade = 2000;
       const fadeIn = Math.max(0, Math.min(1, (loopScroll - (loopDepth - wrapFade)) / wrapFade));
       const shadeOpacity = Math.min(1, Math.max(fadeOut, fadeIn));
-      crawlShade.style.opacity = shadeOpacity.toFixed(3);
+      // 50% black — stars stay visible behind the crawl
+      crawlShade.style.opacity = (shadeOpacity * 0.5).toFixed(3);
     }
 
     // Readouts: top-left shows the camera's virtual Z coordinate in the

@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@lucasmarkes/hairline": "^0.5.0",
     "three": "^0.174.0"
   },
   "devDependencies": {
