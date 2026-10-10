@@ -292,7 +292,10 @@ body.booting .m-hud {
 .m-holo {
   position: relative;
   width: 100%;
-  height: clamp(150px, 29svh, 300px);
+  /* svh is scaled by the site zoom — divide by --z so the hologram
+     keeps its intended ~29svh share of the screen instead of looking
+     vertically squeezed after the zoom-out */
+  height: clamp(150px, calc(29svh / var(--z)), calc(300px / var(--z)));
   transform: perspective(700px) rotateX(9deg);
   transform-origin: 50% 100%;
 }
