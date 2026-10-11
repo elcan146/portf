@@ -1122,6 +1122,64 @@ body.booting .m-term {
   text-shadow: 0 0 10px rgba(140, 230, 255, 0.8);
 }
 
+/* ---------- Tablets ---------- */
+/* Media queries see real CSS px (body zoom only scales element lengths,
+   not the viewport). Portrait phones top out ~430px; tablets start
+   ~744px — 700px splits them. pointer:coarse keeps /m/ opened on a
+   desktop window phone-shaped. Placed BEFORE the landscape block —
+   a sideways phone (844px+) matches both, landscape rules keep winning. */
+@media (min-width: 700px) and (pointer: coarse) {
+  :root {
+    --hud-h: 52px;
+  }
+  .m-hud {
+    font-size: 12.5px;
+    padding-left: calc(24px + var(--safe-l));
+    padding-right: calc(24px + var(--safe-r));
+  }
+  .m-hero {
+    max-width: 720px;
+  }
+  .m-sec {
+    max-width: 860px;
+    padding-top: 84px;
+  }
+  .m-crawl {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  .m-panel {
+    padding: 28px 26px 24px;
+  }
+  .m-term-btn {
+    min-height: 72px;
+    padding: 14px 20px;
+  }
+  .m-proj {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    gap: 30px;
+    align-items: start;
+  }
+  .m-proj-body {
+    margin-top: 0;
+  }
+  .m-links {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .m-dock {
+    gap: 6px;
+    padding: 6px;
+  }
+  .m-dock a {
+    min-width: 118px;
+    min-height: 54px;
+    font-size: 11px;
+  }
+}
+
 /* ---------- Very short portrait phones (SE-class) ---------- */
 @media (orientation: portrait) and (max-height: 700px) {
   .m-holo {

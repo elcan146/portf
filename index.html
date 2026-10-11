@@ -4,8 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
-      // Phones get the dedicated mobile layout (/m/) before the heavy 3D
-      // bundle loads. ?desktop=1 opts out and is remembered.
+      // Phones AND tablets get the dedicated mobile layout (/m/) before
+      // the heavy 3D bundle loads. ?desktop=1 opts out and is remembered.
       (function () {
         try {
           if (/[?&]desktop=1\b/.test(location.search)) {
@@ -16,13 +16,17 @@
           if (localStorage.getItem("viewMode") === "desktop") return;
           if (/(^|;\s*)viewMode=desktop/.test(document.cookie)) return;
           var ua = navigator.userAgent;
-          var phone =
-            /iPhone|iPod|Windows Phone|BlackBerry|Opera Mini|IEMobile|Mobile.*Firefox|Android.*Mobile/i.test(ua) ||
-            (navigator.userAgentData && navigator.userAgentData.mobile === true);
-          if (!phone && window.matchMedia("(pointer: coarse)").matches) {
-            phone = Math.min(screen.width, screen.height) < 600;
+          // 'Android' alone covers both phones ("Android ... Mobile") and
+          // tablets (UA drops 'Mobile'). iPadOS 13+ sends "Macintosh", so
+          // it's caught by UA + maxTouchPoints instead.
+          var mobile =
+            /iPhone|iPod|iPad|Windows Phone|BlackBerry|Opera Mini|IEMobile|Mobile.*Firefox|Android|PlayBook|Silk|Kindle/i.test(ua) ||
+            (navigator.userAgentData && navigator.userAgentData.mobile === true) ||
+            (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+          if (!mobile && window.matchMedia("(pointer: coarse)").matches) {
+            mobile = Math.min(screen.width, screen.height) < 800;
           }
-          if (phone) location.replace("/m/" + location.hash);
+          if (mobile) location.replace("/m/" + location.hash);
         } catch (e) {}
       })();
     </script>
@@ -31,7 +35,7 @@
     <meta name="robots" content="index, follow" />
     <meta name="theme-color" content="#020206" />
     <link rel="canonical" href="https://elcanismayilov.com/" />
-    <link rel="alternate" media="only screen and (max-width: 640px)" href="https://elcanismayilov.com/m/" />
+    <link rel="alternate" media="only screen and (max-width: 1024px)" href="https://elcanismayilov.com/m/" />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />

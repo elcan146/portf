@@ -42,8 +42,11 @@ from http.server import SimpleHTTPRequestHandler
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DIST_DIR = os.path.join(ROOT, "dist")
 CONFIG_YML = os.path.join(ROOT, "cloudflared.yml")
-PHONE_UA = re.compile(
-    r"iPhone|iPod|Windows Phone|BlackBerry|Opera Mini|IEMobile|Mobile.*Firefox|Android.*Mobile",
+# Phones AND tablets — 'Android' alone covers tablet UAs (they drop 'Mobile').
+# iPadOS 13+ sends a Mac UA and can't be caught here; the client-side
+# redirect in index.html handles it via maxTouchPoints.
+MOBILE_UA = re.compile(
+    r"iPhone|iPod|iPad|Windows Phone|BlackBerry|Opera Mini|IEMobile|Mobile.*Firefox|Android|PlayBook|Silk|Kindle",
     re.I,
 )
 
@@ -87,7 +90,7 @@ class SPARequestHandler(SimpleHTTPRequestHandler):
             return False
         if self.headers.get("Sec-CH-UA-Mobile") == "?1":
             return True
-        return bool(PHONE_UA.search(self.headers.get("User-Agent") or ""))
+        return bool(MOBILE_UA.search(self.headers.get("User-Agent") or ""))
 
     def send_head(self):
         raw_path, _, query = self.path.partition("?")

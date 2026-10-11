@@ -290,8 +290,8 @@
     </noscript>
 
     <script>
-      // Same phone detection as index.html — mobiles land on /m/,
-      // desktops (and remembered ?desktop=1 opt-outs) on /.
+      // Same mobile+tablet detection as index.html — tablets land on
+      // /m/, desktops (and remembered ?desktop=1 opt-outs) on /.
       (function () {
         var target = "/";
         try {
@@ -303,13 +303,14 @@
             target = "/"; // m.<domain> root already serves the mobile layout
           } else if (!desktop) {
             var ua = navigator.userAgent;
-            var phone =
-              /iPhone|iPod|Windows Phone|BlackBerry|Opera Mini|IEMobile|Mobile.*Firefox|Android.*Mobile/i.test(ua) ||
-              (navigator.userAgentData && navigator.userAgentData.mobile === true);
-            if (!phone && window.matchMedia("(pointer: coarse)").matches) {
-              phone = Math.min(screen.width, screen.height) < 600;
+            var mobile =
+              /iPhone|iPod|iPad|Windows Phone|BlackBerry|Opera Mini|IEMobile|Mobile.*Firefox|Android|PlayBook|Silk|Kindle/i.test(ua) ||
+              (navigator.userAgentData && navigator.userAgentData.mobile === true) ||
+              (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1);
+            if (!mobile && window.matchMedia("(pointer: coarse)").matches) {
+              mobile = Math.min(screen.width, screen.height) < 800;
             }
-            target = phone ? "/m/" : "/";
+            target = mobile ? "/m/" : "/";
           }
         } catch (e) {}
 
