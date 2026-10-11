@@ -185,11 +185,7 @@ a {
   padding: var(--safe-t) calc(16px + var(--safe-r)) 0 calc(16px + var(--safe-l));
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  font-family: 'Space Mono', monospace;
-  font-size: 10.5px;
-  letter-spacing: 0.24em;
+  justify-content: center;
   background: linear-gradient(180deg, rgba(2, 2, 6, 0.92), rgba(2, 2, 6, 0.6));
   -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
@@ -201,17 +197,31 @@ body.booting .m-hud {
   transform: translateY(-100%);
 }
 .m-hud-id {
-  color: #bfe0ff;
+  display: flex;
+  align-items: center;
+  height: 100%;
   text-decoration: none;
-  font-weight: 700;
-  white-space: nowrap;
 }
-.m-hud-sec {
-  color: var(--cyan);
-  text-shadow: 0 0 8px rgba(75, 242, 255, 0.4);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.m-hud-logo {
+  display: block;
+  height: calc(var(--hud-h) * 0.55);
+  width: auto;
+  animation: m-logo-breathe 3.2s ease-in-out infinite;
+}
+@keyframes m-logo-breathe {
+  0%,
+  100% {
+    filter:
+      drop-shadow(0 0 6px rgba(75, 242, 255, 0.4))
+      drop-shadow(0 0 14px rgba(75, 242, 255, 0.18));
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 10px rgba(75, 242, 255, 1))
+      drop-shadow(0 0 28px rgba(75, 242, 255, 0.55))
+      drop-shadow(0 0 48px rgba(75, 242, 255, 0.3))
+      brightness(1.18);
+  }
 }
 .m-hud-bar {
   position: absolute;
