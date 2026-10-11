@@ -104,11 +104,26 @@ class SPARequestHandler(SimpleHTTPRequestHandler):
                 self.send_header("Content-Length", "0")
                 self.end_headers()
                 return None
-        # SPA fallback: extensionless paths that don't map to a file -> index.html
+        # Anything that doesn't map to a real file/dir gets the 404 page,
+        # which counts down and redirects to / or /m/ per device.
         path = self.translate_path(self.path)
-        if not os.path.exists(path) and "." not in os.path.basename(self.path.split("?", 1)[0]):
-            self.path = "/index.html"
+        if not os.path.exists(path):
+            return self._send_404()
         return super().send_head()
+
+    def _send_404(self):
+        try:
+            with open(os.path.join(DIST_DIR, "404.html"), "rb") as f:
+                body = f.read()
+        except OSError:
+            return super().send_error(404)
+        self.send_response(404)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        if self.command != "HEAD":
+            self.wfile.write(body)
+        return None
 
 
 class ThreadedHTTPServer(socketserver.ThreadingTCPServer):

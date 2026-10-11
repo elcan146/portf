@@ -1640,14 +1640,56 @@ function showWindowPanel(name) {
     .forEach((el, i) => wmScrambleEl(el, 70 + i * 95));
 }
 
-// Contact card — hovering a line decodes its value with the same 21st
-// scramble effect the window menu uses (21st.dev dqnamo/scramble-text).
+// Contact card — values decode with the same 21st scramble effect the
+// window menu uses (21st.dev dqnamo/scramble-text). Per-element run
+// token (like mobile's scrambleEl) so the reveal decode and hovers on
+// different links can run in parallel without cancelling each other.
+function crScrambleEl(el, delayMs) {
+  const text = el.dataset.text ?? (el.dataset.text = el.textContent);
+  if (WM_REDUCE_MOTION) {
+    el.textContent = text;
+    return;
+  }
+  const chars = [...text];
+  const run = (el._crRun = (el._crRun || 0) + 1);
+  const perTick = Math.max(1, Math.ceil(chars.length / 30));
+  const t0 = performance.now() + delayMs;
+  let revealed = 0;
+  const tick = (now) => {
+    if (run !== el._crRun) return;
+    if (now < t0) {
+      requestAnimationFrame(tick);
+      return;
+    }
+    revealed = Math.min(chars.length, revealed + perTick);
+    let out = "";
+    for (let i = 0; i < chars.length; i++) {
+      out +=
+        i < revealed || chars[i] === " "
+          ? chars[i]
+          : WM_SCRAMBLE_CHARS[(Math.random() * WM_SCRAMBLE_CHARS.length) | 0];
+    }
+    el.textContent = out;
+    if (revealed < chars.length) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+
+// Whole-card decode — every value scrambles in, staggered like the
+// mobile section's data-decode reveal.
+function crDecodeCard() {
+  if (!contactReveal) return;
+  contactReveal
+    .querySelectorAll("[data-cr-scramble]")
+    .forEach((el, i) => crScrambleEl(el, 90 + i * 85));
+}
+
 document.querySelectorAll(".cr-line").forEach((a) => {
   const target = a.querySelector("[data-cr-scramble]");
   if (!target) return;
-  a.addEventListener("mouseenter", () => wmScrambleEl(target, 0));
+  a.addEventListener("mouseenter", () => crScrambleEl(target, 0));
   a.addEventListener("mouseleave", () => {
-    wmRunId++; // kill the in-flight decode so it stops mid-way cleanly
+    target._crRun = (target._crRun || 0) + 1; // stop the in-flight decode
     if (target.dataset.text) target.textContent = target.dataset.text;
   });
 });
@@ -2398,6 +2440,7 @@ function animate(currentTime) {
       if (active !== contactReveal.classList.contains("on")) {
         contactReveal.classList.toggle("on", active);
         contactReveal.setAttribute("aria-hidden", active ? "false" : "true");
+        if (active) crDecodeCard(); // values scramble in, like mobile's data-decode
       }
     }
     eu.uScale.value =
