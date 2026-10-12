@@ -413,6 +413,48 @@ body.warping .window-menu {
 .wm-figure-host.on {
   visibility: visible;
 }
+/* Portrait morph — two aligned line-art PNGs; the bold pass (me2) fades
+   over the thin one so the strokes read as ink bleeding in, then lifting.
+   invert() turns the black art white on black; screen blend drops the
+   black; sepia/hue-rotate lands it on the amber hologram palette. */
+.wm-portrait img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: screen;
+  animation: wmBreath 6s ease-in-out infinite;
+  filter:
+    invert(1)
+    sepia(1)
+    saturate(4)
+    hue-rotate(-14deg)
+    drop-shadow(0 0 5px rgba(255, 180, 60, 0.4));
+}
+.wm-portrait .wm-portrait-b {
+  opacity: 0;
+  animation:
+    wmBreath 6s ease-in-out infinite,
+    wmPortraitMorph 6s ease-in-out infinite;
+}
+/* Breathing — inhale the bold pass in (2s), hold, exhale back to thin
+   (2s), short rest; the scale swell on both layers sells the breath.
+   6s = exactly one loop per portrait appearance. */
+@keyframes wmBreath {
+  0%, 92%, 100% { transform: scale(0.985); }
+  38%, 58%      { transform: scale(1.015); }
+}
+@keyframes wmPortraitMorph {
+  0%        { opacity: 0; }
+  35%, 58%  { opacity: 1; }
+  92%, 100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wm-portrait img {
+    animation: none;
+  }
+}
 /* Panel up: figure dims and sinks slightly instead of popping away */
 .window-menu[data-active] .wm-figure {
   opacity: 0;

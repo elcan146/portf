@@ -1798,27 +1798,48 @@ if (wmGridEl) {
 const wmFigureEl = document.getElementById("wm-figure");
 if (wmFigureEl) {
   const specs = [dish, router, padlock, settle, query, vault, cabinet, turntable];
-  const figures = specs.map((fn, i) => {
+  specs.forEach((fn) => {
     const host = document.createElement("div");
-    host.className = "wm-figure-host" + (i === 0 ? " on" : "");
+    host.className = "wm-figure-host";
     wmFigureEl.appendChild(host);
-    return fn(host, { intensity: 0.7, play: true });
+    fn(host, { intensity: 0.7, play: true });
   });
+  // children[0] is the portrait morph host (declared .on in the HTML);
+  // wmIdx indexes ALL hosts so the portrait stays in the rotation
   let wmIdx = 0;
+  // The portrait dwells for exactly one 6s breath loop; hairline figures
+  // keep the 2-4s cadence. Evaluated after wmIdx updates so the dwell
+  // matches the figure actually on screen.
+  const wmDwell = () =>
+    wmFigureEl.children[wmIdx].classList.contains("wm-portrait")
+      ? 6000
+      : 2000 + Math.random() * 2000;
   const wmGlitchSwap = () => {
     wmFigureEl.classList.add("glitching");
     // flip .on mid-glitch so the incoming figure glitches in too
     setTimeout(() => {
       wmFigureEl.children[wmIdx].classList.remove("on");
       let next = wmIdx;
-      while (next === wmIdx) next = (Math.random() * figures.length) | 0;
+      while (next === wmIdx)
+        next = (Math.random() * wmFigureEl.children.length) | 0;
       wmIdx = next;
-      wmFigureEl.children[wmIdx].classList.add("on");
+      const on = wmFigureEl.children[wmIdx];
+      on.classList.add("on");
+      // restart the 6s breath on every portrait appearance — a CSS
+      // animation keeps running under visibility:hidden, so without a
+      // reflow the loop would resume mid-cycle
+      if (on.classList.contains("wm-portrait")) {
+        on.querySelectorAll("img").forEach((im) => {
+          im.style.animation = "none";
+          void im.offsetWidth;
+          im.style.animation = "";
+        });
+      }
+      setTimeout(wmGlitchSwap, wmDwell());
     }, 160);
     setTimeout(() => wmFigureEl.classList.remove("glitching"), 360);
-    setTimeout(wmGlitchSwap, 2000 + Math.random() * 2000);
   };
-  setTimeout(wmGlitchSwap, 2000 + Math.random() * 2000);
+  setTimeout(wmGlitchSwap, wmDwell());
 }
 const cockpitBackBtn = document.getElementById("cockpit-back");
 if (cockpitBackBtn) {

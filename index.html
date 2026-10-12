@@ -145,7 +145,14 @@
       </svg>
       <!-- Idle hologram: hairline figures cycled with a glitch swap
            (mounted by main.js — vanilla API, no React needed) -->
-      <div class="wm-figure" id="wm-figure"></div>
+      <div class="wm-figure" id="wm-figure">
+        <!-- Portrait morph: thin↔bold line-art crossfade (me.png → me2.png).
+             First host in the rotation, shown on load. -->
+        <div class="wm-figure-host wm-portrait on">
+          <img class="wm-portrait-a" src="/cockpit/me.png" alt="" aria-hidden="true" />
+          <img class="wm-portrait-b" src="/cockpit/me2.png" alt="" aria-hidden="true" />
+        </div>
+      </div>
 
       <section class="wm-panel" data-panel="about">
         <div class="wm-head wm-head-lower">

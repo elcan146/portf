@@ -1,74 +1,206 @@
-# Cosmic Space Portfolio
+<div align="center">
 
-Personal portfolio of **Elcan Ismayilov** — Systems Architecture & Full Stack Software Engineer based in Baku, Azerbaijan.
+<img src="logo.png" alt="CGrep logo" width="240">
 
-Live site: **[elcanismayilov.com](https://elcanismayilov.com)**
+# CGrep
 
-A scroll-driven 3D flight through deep space, built with Three.js. The visitor pilots past a 90,000-star field and floating photogrammetry-scanned objects (satellites, radar dishes, PCs, audio gear), while a spaceship cockpit overlay serves as the site's navigation terminal.
+### Real-Time SDR Radio Monitoring & SIGINT-Style Analysis Suite
 
-## Features
+*Capture. Demodulate. Visualize. Understand the spectrum.*
 
-- **WebGL space scene** — ~90k stars and 700 nebula sprites spread across a 36,000-unit depth, with scroll-momentum physics (inertia, damping, lerp-smoothed camera).
-- **Photogrammetry cockpit** — GLB models (`3d/`) placed as floating exhibits along the flight path.
-- **HUD overlays** — cockpit "NAV TERMINAL" menu, a Fallout-4-style compass band driven by the camera's world heading, and live depth/scroll counters.
-- **Star Wars-style intro crawl** for the About sequence.
-- **Dual layout** — phones and tablets get a dedicated lightweight page at `/m/`; detection runs client-side (UA + `maxTouchPoints` + `pointer: coarse`) and server-side, with a `?desktop=1` opt-out remembered via cookie/localStorage.
-- **Custom 404** — countdown page that redirects to `/` or `/m/` per device.
-- **SEO/OG ready** — Open Graph, Twitter cards, JSON-LD `Person` schema, sitemap, robots.txt, favicons.
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![Three.js](https://img.shields.io/badge/Three.js-000000?style=for-the-badge&logo=threedotjs&logoColor=white)](https://threejs.org)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org)
+[![RTL-SDR](https://img.shields.io/badge/RTL--SDR-Hardware-red?style=for-the-badge)](https://osmocom.org/projects/rtl-sdr/wiki)
+[![nRSP-ST](https://img.shields.io/badge/SDRplay-nRSP--ST-blueviolet?style=for-the-badge)](https://www.sdrplay.com)
+[![RSP1B](https://img.shields.io/badge/SDRplay-RSP1B-blueviolet?style=for-the-badge)](https://www.sdrplay.com)
+[![MSI.SDR Pro](https://img.shields.io/badge/MSI.SDR-Pro-blueviolet?style=for-the-badge)]()
+[![License](https://img.shields.io/badge/License-View--Only-orange?style=for-the-badge)](LICENSE)
 
-## Tech stack
+</div>
 
-- **Three.js** (`GLTFLoader`) + [`@lucasmarkes/hairline`](https://www.npmjs.com/package/@lucasmarkes/hairline) models
-- **Vite 6** — multi-page build (`index.html` + `m/index.html`), custom middleware plugin for `/3d`, `/font`, `/logo` assets and 404 routing
-- **Python `serve.py`** — production static server for `dist/` with SPA fallback, cache headers, mobile UA redirects and Cloudflare Tunnel integration
-- **GitHub Actions** — `deploy.yml` SSHes into an AWS EC2 host on every push to `main`, pulls, builds and restarts the `portfo` systemd service
+---
 
-## Getting started
+## What is CGrep?
+
+**CGrep** is a full-stack Software-Defined Radio monitoring platform. It interfaces with **RTL-SDR** hardware to sweep FM & DAB+ bands, demodulate broadcast audio in real time, detect and log signals, and presents everything through a **3D tactical web dashboard** — complete with geographic situational awareness, passkey-protected multi-user access, an AI operator assistant, and automated WhatsApp alerts.
+
+It is not a toy waterfall viewer — it's a distributed RF monitoring network with collectors, a central PostgreSQL backend, cloud backups, and a command-center UI.
+
+---
+
+##  Feature Highlights
+
+| | |
+|:-:|---|
+| 🎛️ | **SDR#-grade desktop GUI** — FFT spectrum, waterfall, click-to-tune, WFM demod, audio out (PyQt6 + pyqtgraph) |
+| 📶 | **FM + DAB+ monitoring** — ensemble scanning (11B/12A), RDS decoding, multi-receiver support |
+| 🗼 | **Remote collector network** — headless `sdr_collector.py` agents stream sweeps to a central server |
+| 🌐 | **3D tactical dashboard** — React Three Fiber scene, glassmorphism HUD, live spectrum at 30 FPS over WebSocket |
+| 🗺️ | **Geographic awareness** — region map overlay, population/coverage masks, peak-intensity terrain shader |
+| 🤖 | **AI operator assistant** — local Ollama-powered chat embedded in the dashboard (fully self-hosted) |
+| 🧠 | **ML threshold calibration** — unsupervised KDE + valley detection auto-tunes noise floor & signal thresholds per site |
+| 🔐 | **Passwordless auth** — WebAuthn/passkeys, JWT sessions, RBAC roles & permissions |
+| 📲 | **WhatsApp alerts** — self-hosted OpenWA / Green API notifications for signal events |
+| ☁️ | **Cloud backups** — scheduled database exports to S3-compatible storage |
+| 📄 | **Report generator** — one-click PDF reports of captured signal activity |
+| 🌍 | **i18n** — full English / Azerbaijani UI translations |
+
+---
+
+## 🏗️ Architecture
+
+```
+        ┌──────────────┐   IQ samples   ┌───────────────────┐
+        │   RTL-SDR    │ ─────────────► │   DSP pipeline    │
+        │   Dongles    │                │  FFT · WFM · RDS  │
+        └──────────────┘                └─────────┬─────────┘
+                                                  │
+              ┌───────────────────────────────────┼────────────────────┐
+              │                                   │                    │
+              ▼                                   ▼                    ▼
+     ┌────────────────┐                 ┌──────────────────┐  ┌──────────────┐
+     │  Desktop GUIs  │                 │  FastAPI server  │  │ Collectors   │
+     │ PyQt6 + audio  │                 │  REST + WS :8000 │  │ (remote SDR) │
+     └────────────────┘                 └────────┬─────────┘  └──────┬───────┘
+                                                 │                   │
+                        ┌────────────┬───────────┼───────────────────┘
+                        ▼            ▼           ▼
+                 ┌───────────┐ ┌───────────┐ ┌────────────────────┐
+                 │ PostgreSQL│ │  Ollama   │ │ React dashboard    │
+                 │  signals  │ │  AI chat  │ │ 3D scene · ECharts │
+                 └───────────┘ └───────────┘ └────────────────────┘
+```
+
+---
+
+## 🧰 Tech Stack
+
+**Backend**
+
+![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+![NumPy](https://img.shields.io/badge/NumPy-013243?logo=numpy&logoColor=white)
+![SciPy](https://img.shields.io/badge/SciPy-8CAAE6?logo=scipy&logoColor=white)
+![PyQt6](https://img.shields.io/badge/PyQt6-41CD52?logo=qt&logoColor=white)
+
+- `server.py` — FastAPI app: REST API, WebSocket streaming, WebAuthn auth, RBAC, chat, backups
+- `sdr_collector.py`, `dual_site_monitor.py`, `regional_monitor.py` — headless collector agents
+- `fm_dab_sweep.py`, `dab11b_monitor.py`, `dab12a_monitor.py` — FM + DAB+ band monitors
+- `spectrum_core.py`, `monitor.py`, `lookforwaterfall.py`, `dashboard.py` — PyQt6 desktop apps
+
+**Frontend** (`sdr-dashboard/`)
+
+![React](https://img.shields.io/badge/React_19-61DAFB?logo=react&logoColor=black)
+![Vite](https://img.shields.io/badge/Vite-646CFF?logo=vite&logoColor=white)
+![Three.js](https://img.shields.io/badge/Three.js-black?logo=threedotjs&logoColor=white)
+![Tailwind](https://img.shields.io/badge/Tailwind_4-38B2AC?logo=tailwindcss&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+
+- React Three Fiber + drei + postprocessing — 3D tactical scene, bloom, custom GLSL terrain shader
+- ECharts / Recharts — analytics panels & signal statistics
+- Tiptap — rich chat input; tsParticles, GSAP, Framer Motion — HUD effects
+- SimpleWebAuthn — passkey login; i18n EN/AZ
+
+---
+
+## 🚀 Quick Start
+
+### 1. Backend
 
 ```bash
+pip install numpy scipy pyqtgraph PyQt6 sounddevice pyrtlsdr \
+            fastapi uvicorn psycopg2-binary
+
+python server.py          # API + WebSocket  →  http://localhost:8000
+python spectrum_core.py   # desktop spectrum GUI (optional)
+```
+
+### 2. Dashboard
+
+```bash
+cd sdr-dashboard
 npm install
-npm run dev        # dev server on :5173
+npm run dev               # → http://localhost:5173
 ```
 
-Build for production:
+### 3. Collectors (optional, on remote SDR machines)
 
 ```bash
-npm run build      # outputs dist/ (models, fonts, videos are copied in)
+python sdr_collector.py   # streams sweeps to the central server
 ```
 
-Serve the production build (optionally behind a Cloudflare Tunnel):
+> ⚙️ All secrets/hosts are configured via environment variables or a local
+> `config.env` (intentionally not committed — fill in your own keys).
 
-```bash
-python serve.py               # dist/ on :8000 + cloudflared
-python serve.py --build       # build first, then serve
-python serve.py --no-tunnel   # local only
-```
+---
 
-Tunnel selection order: `TUNNEL_TOKEN` env var → `TUNNEL_ID` env var → `cloudflared.yml` → free quick tunnel (`*.trycloudflare.com`).
-
-## Project structure
+## 📁 Project Structure
 
 ```
-index.html          Desktop entry — cockpit menu, HUD, crawl stages
-m/index.html        Mobile/tablet entry (lightweight)
-style.css           All site styles
-src/main.js         Three.js scene, scroll physics, HUD wiring
-3d/                 GLB models (antenna, satellite, radar dish, PCs, audio gear...)
-font/               Custom webfonts
-logo/               Logo images
-videos/             Project showcase videos
-public/             404.html, favicons, manifest, sitemap, robots.txt
-vite.config.js      Asset middleware + dist copying + dev-server hosts
-serve.py            Production server + Cloudflare Tunnel
-.github/workflows/  CI deploy to AWS over SSH
+CGrep-v3/
+├── server.py               # FastAPI backend — API, WS, auth, chat, backups
+├── spectrum_core.py        # PyQt6 spectrum + waterfall + audio GUI
+├── dashboard.py            # radio network demo (rtl_fm pipe audio)
+├── sdr_collector.py        # headless remote collector agent
+├── fm_dab_sweep.py         # FM + DAB+ band sweeper
+├── dab11b_monitor.py       # DAB ensemble monitor (11B)
+├── dab12a_monitor.py       # DAB ensemble monitor (12A)
+├── dual_site_monitor.py    # two-site FM/DAB monitor
+├── regional_monitor.py     # single-site regional monitor
+├── waterfall.py            # waterfall analysis
+├── generate_pdf.py         # signal report generator
+├── auth_router.py          # WebAuthn/JWT auth routes
+├── models.py               # DB models
+├── simulation.py           # simulated RF data for dev/demo
+├── sdr-dashboard/          # React 19 + Vite tactical dashboard
+├── essentials/             # launcher scripts & thresholds
+└── rpfft/                  # rtl-power-fftw (vendored, fast sweeps)
 ```
 
-## Deployment
+---
 
-Every push to `main` triggers the **Deploy to AWS** workflow, which SSHes into the EC2 host and runs `git pull → npm install → npm run build → systemctl restart portfo`. Public access is handled by a Cloudflare Tunnel terminating at `elcanismayilov.com`.
+## Demo
 
-Required GitHub secrets: `AWS_HOST`, `AWS_USER`, `AWS_SSH_KEY`.
+<div align="center">
+  <table>
+    <tr>
+      <td align="center"><b>Dashboard</b></td>
+      <td align="center"><b>Mobile</b></td>
+    </tr>
+    <tr>
+      <td><video src="https://github.com/user-attachments/assets/69ecd77a-acfd-4d07-9f7e-7b84c19701d5" controls muted width="440"></video></td>
+      <td><video src="https://github.com/user-attachments/assets/64d1057c-ccbb-4e70-a71f-2d175aef5577" controls muted width="220"></video></td>
+    </tr>
+  </table>
+</div>
 
-## License
+---
 
-Private — all rights reserved.
+## 🗺️ Roadmap
+
+- [ ] Multi-band presets (airband, ADS-B, POCSAG)
+- [ ] Per-signal recording & IQ capture on trigger
+- [ ] Grafana-style alerting rules
+- [ ] Docker compose deployment
+
+---
+
+## 📜 License
+
+**Copyright © 2026 Elcan İsmayılov. All rights reserved.**
+
+This repository is provided for **view-only and educational purposes**.
+Use, reproduction, modification, distribution, or commercialization is
+prohibited without explicit written permission — see [LICENSE](LICENSE).
+
+*RX-only project — be aware of your local regulations.*
+
+<div align="center">
+
+**Built for the airwaves** 📡
+
+</div>

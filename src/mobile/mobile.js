@@ -250,7 +250,18 @@ if (gridEl) {
   }
 }
 
-const FIGURES = [dish, router, padlock, settle, query, vault, cabinet, turntable];
+// Portrait morph — me.png ↔ me2.png breathing crossfade, styled in
+// mobile.css (.m-portrait). Duck-types the hairline figure API (returns
+// { destroy }) so mountFigure can treat it like any other figure.
+const portraitFigure = (host) => {
+  host.classList.add("m-portrait");
+  host.innerHTML =
+    '<img class="m-portrait-a" src="/cockpit/me.png" alt="" aria-hidden="true" />' +
+    '<img class="m-portrait-b" src="/cockpit/me2.png" alt="" aria-hidden="true" />';
+  return { destroy() {} };
+};
+// Portrait is index 0 → mounts first on load, then stays in the rotation
+const FIGURES = [portraitFigure, dish, router, padlock, settle, query, vault, cabinet, turntable];
 const figEl = $("#m-figure");
 let fig = null;
 let figHost = null;
@@ -270,6 +281,10 @@ function mountFigure(i) {
   figHost = host;
   figIdx = i;
 }
+// Portrait (index 0) holds for exactly one 6s breath loop each
+// appearance; hairline figures keep the 2.6-4.6s cadence. Evaluated
+// after figIdx updates so the dwell matches the mounted figure.
+const figDwell = () => (figIdx === 0 ? 6000 : 2600 + Math.random() * 2000);
 function swapFigure() {
   if (!figActive) return;
   figEl.classList.add("glitching");
@@ -278,15 +293,15 @@ function swapFigure() {
     let n = figIdx;
     while (n === figIdx) n = (Math.random() * FIGURES.length) | 0;
     mountFigure(n);
+    figTimer = setTimeout(swapFigure, figDwell());
   }, 160);
   setTimeout(() => figEl.classList.remove("glitching"), 360);
-  figTimer = setTimeout(swapFigure, 2600 + Math.random() * 2000);
 }
 function startFigures() {
   if (figActive || !figEl) return;
   figActive = true;
   if (!fig) mountFigure(figIdx);
-  if (!REDUCE) figTimer = setTimeout(swapFigure, 2200);
+  if (!REDUCE) figTimer = setTimeout(swapFigure, figDwell());
 }
 function stopFigures() {
   figActive = false;
